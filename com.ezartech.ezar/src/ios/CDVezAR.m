@@ -1,6 +1,6 @@
 //derived from http://www.ios-developer.net/iphone-ipad-programmer/development/camera/record-video-with-avcapturesession-2
  
-#import <Cordova/CDV.h>
+#import "Cordova/CDV.h"
 #import <AVFoundation/AVFoundation.h>
 #import "CDVezAR.h"
 

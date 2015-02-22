@@ -11,8 +11,8 @@ module.exports = (function() {
     }
            
     function _onError(data) {
-        if (isFunction(ezAR.onError)) {
-           ezAR.onError(data);
+        if (isFunction(_ezAR.onError)) {
+           _ezAR.onError(data);
         }
     }
                   
@@ -78,7 +78,7 @@ module.exports = (function() {
             }
         }
         
-        ezAR.onError = errorCallback;
+        _ezAR.onError = errorCallback;
         
         exec(onInit,
              _onError,

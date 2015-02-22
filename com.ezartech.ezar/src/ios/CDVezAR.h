@@ -5,7 +5,7 @@
 //
 //
 
-#import <Cordova/CDV.h>
+#import "Cordova/CDV.h"
 #import <AVFoundation/AVFoundation.h>
 
 #ifndef CDVezAR_h

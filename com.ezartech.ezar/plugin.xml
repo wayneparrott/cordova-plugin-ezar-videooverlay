@@ -24,7 +24,12 @@
         </config-file>
         <header-file src="src/ios/CDVezAR.h" />
         <source-file src="src/ios/CDVezAR.m" />
-        <framework src="AVFoundation.framework" />
+        <!-- <source-file src="src/ios/libezar.a" /> -->
+        
+        <framework src="UIKit.framework" />
+    	<framework src="Foundation.framework" />
+    	<framework src="AVFoundation.framework" />
+        
     </platform>
 
 </plugin>
