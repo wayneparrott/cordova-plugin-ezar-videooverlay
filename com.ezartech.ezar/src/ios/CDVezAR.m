@@ -1,4 +1,8 @@
-//derived from http://www.ios-developer.net/iphone-ipad-programmer/development/camera/record-video-with-avcapturesession-2
+// CDVezAR.m
+//
+// Copyright 2015, ezAR Technologies
+// All rights reserved.
+//
  
 #import "Cordova/CDV.h"
 #import <AVFoundation/AVFoundation.h>
@@ -7,7 +11,6 @@
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 
 @implementation CDVezAR
-
 {
     AVCaptureSession *captureSession;
     AVCaptureDevice  *backVideoDevice, *frontVideoDevice, *videoDevice;
@@ -16,6 +19,8 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     AVCaptureVideoPreviewLayer *previewLayer;
 }
 
+
+// INIT PLUGIN - Register for orientation changes
 - (void) pluginInitialize
 {
     [super pluginInitialize];
@@ -28,22 +33,28 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
            object:device];
 }
 
-//********** ORIENTATION CHANGED **********
+
+//DEVICE ORIENTATION CHANGE HANDLER
 - (void)orientationChanged:(NSNotification *)note
 {
     [self updatePreviewOrientation];
 }
 
+
+// SETUP EZAR 
+// create video-preview under webview and 
+// make webview transparent
+// return camera, light features and display details
+// 
 - (void)init:(CDVInvokedUrlCommand*)command
 {
     //set main view background to black; otherwise white area appears during rotation
     self.viewController.view.backgroundColor = [UIColor blackColor];
-    
+ 
+ 	//cache original webview background color for restoring later
     bgColor = self.webView.backgroundColor;
     
-    //---------------------------------
-    //----- SETUP CAPTURE SESSION -----
-    //---------------------------------
+    // SETUP CAPTURE SESSION -----
     NSLog(@"Setting up capture session");
     captureSession = [[AVCaptureSession alloc] init];
     
@@ -75,13 +86,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     //ADD VIDEO PREVIEW LAYER
     previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:captureSession] ;
     [previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
-    
-    
-    //----- DISPLAY THE PREVIEW LAYER -----
-    self.webView.opaque = NO;
-    
-    //------ SETUP PREVIEW LAYER and Camera View-----
-    //UIInterfaceOrientation ifOrient = [self getUIInterfaceOrientation];
     previewLayer.frame = self.webView.frame;
     
      UIView *cameraView = [[UIView alloc] init];
@@ -89,17 +93,26 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     cameraView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     cameraView.frame = previewLayer.frame;
     
-    // insert cameraview below the webview
+    //POSITION cameraview below the webview
     [[self.webView superview] insertSubview:cameraView belowSubview: self.webView];
    
+   
+    //MAKE WEBVIEW TRANSPARENT
+    self.webView.opaque = NO;
     
+    //ACCESS DEVICE INFO: CAMERAS, ...
     NSDictionary* deviceInfoResult = [self getDeviceInfo];
+    
     CDVPluginResult* pluginResult =
         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary: deviceInfoResult];
     
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+// Return device Camera details
+//
 - (void)getCameras:(CDVInvokedUrlCommand*)command
 {
     NSDictionary* cameras = [self getCameras];
@@ -110,6 +123,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+// Set camera as the default 
+//
 - (void)activateCamera:(CDVInvokedUrlCommand*)command
 {
     NSString* cameraPos = [command.arguments objectAtIndex:0];
@@ -128,6 +145,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void)deactivateCamera:(CDVInvokedUrlCommand*)command
 {
     [self basicDeactivateCamera];
@@ -136,6 +157,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void)startCamera:(CDVInvokedUrlCommand*)command
 {
     NSString* cameraPos = [command.arguments objectAtIndex:0];
@@ -166,6 +191,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void)stopCamera:(CDVInvokedUrlCommand*)command
 {
     [self basicStopCamera];
@@ -174,6 +203,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void) maxZoom:(CDVInvokedUrlCommand*)command
 {
     CGFloat result = videoDeviceInput.device.activeFormat.videoZoomFactorUpscaleThreshold;
@@ -184,6 +217,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void) getZoom:(CDVInvokedUrlCommand*)command
 {
     double zoomLevel = videoDevice.videoZoomFactor;
@@ -194,6 +231,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void) setZoom:(CDVInvokedUrlCommand*)command
 {
     NSNumber* zoomArg = [command.arguments objectAtIndex:0];
@@ -206,6 +247,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void) getLight:(CDVInvokedUrlCommand*)command
 {
     NSInteger lightLevel = -1;
@@ -222,6 +267,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void) setLight:(CDVInvokedUrlCommand*)command
 {
     NSNumber* lightArg = [command.arguments objectAtIndex:0];
@@ -232,6 +281,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void) screenshot:(CDVInvokedUrlCommand*)command
 {
     UIWindow *topWindow = [[[UIApplication sharedApplication].windows sortedArrayUsingComparator:^NSComparisonResult(UIWindow *win1, UIWindow *win2) {
@@ -253,6 +306,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+
+//
+//
+//
 - (void)imageSavedToPhotosAlbum:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo {
     NSString *message;
     NSString *title;
@@ -271,7 +328,9 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [alert show];
 }
 
+
 //---------------------------------------------------------------
+//
 - (NSDictionary*)getDeviceInfo
 {
     NSMutableDictionary* deviceInfo = [NSMutableDictionary dictionaryWithDictionary: [self getCameras]];
@@ -289,6 +348,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return deviceInfo;
 }
 
+
+//
+//
+//
 - (NSDictionary*)getCameras
 {
     NSMutableDictionary* cameraInfo = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -302,10 +365,13 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
         }
     }
 
-    //return [NSDictionary dictionaryWithDictionary: cameraInfo];
     return cameraInfo;
 }
 
+
+//
+//
+//
 - (NSDictionary*)getCameraProps: (AVCaptureDevice *)camera
 {
     NSMutableDictionary* cameraProps = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -324,10 +390,13 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     } else if ([camera position] == AVCaptureDevicePositionBack) {
         [cameraProps setObject: @"BACK" forKey:@"position"];
     }
-    //return [NSDictionary dictionaryWithDictionary: cameraProps];
     return cameraProps;
 }
 
+
+//
+//
+//
 - (void)basicActivateCamera: (NSString*)cameraPos zoom: (double)zoomLevel light: (int)lightLevel error: (NSError*) error
 {
     videoDevice = nil;
@@ -379,6 +448,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
                  
 }
 
+
+//
+//
+//
 - (void)basicDeactivateCamera
 {
     //stop the session
@@ -392,6 +465,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
 }
 
+
+//
+//
+//
 - (void)basicStopCamera
 {
     if (captureSession && [captureSession isRunning]) {
@@ -401,6 +478,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     }
 }
 
+
+//
+//
+//
 - (void) basicSetZoom:(double) zoomLevel
 {
     if ([videoDevice lockForConfiguration:nil]) {
@@ -409,6 +490,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     }
 }
 
+
+//
+//
+//
 - (void) basicSetLight: (int)lightLevel
 {
     if (![videoDevice hasTorch]) return;
@@ -419,6 +504,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     }
 }
 
+
+//
+//
+//
 - (void) updatePreviewOrientation
 {
     if (previewLayer == nil) return;
@@ -435,6 +524,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     }
 }
 
+
+//
+//
+//
 - (NSDictionary*)makeErrorResult: (EZAR_ERROR_CODE) errorCode withData: (NSString*) description
 {
     NSMutableDictionary* errorData = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -445,6 +538,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return errorData;
 }
 
+
+//
+//
+//
 - (NSDictionary*)makeErrorResult: (EZAR_ERROR_CODE) errorCode withError: (NSError*) error
 {
     NSMutableDictionary* errorData = [NSMutableDictionary dictionaryWithCapacity:2];
@@ -459,6 +556,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return errorData;
 }
 
+
 //---------------- orientation utilties ----------------
      
 - (UIDeviceOrientation) getDeviceOrientation
@@ -466,10 +564,12 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return [[UIDevice currentDevice] orientation];
 }
 
+
 - (UIInterfaceOrientation)getUIInterfaceOrientation
 {
     return [UIApplication sharedApplication].statusBarOrientation;
 }
+
 
 - (AVCaptureVideoOrientation)videoOrientationFromUIInterfaceOrientation: (UIInterfaceOrientation) ifOrientation
 {
@@ -526,6 +626,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return videoOrientation;
 }
 
+
 - (UIInterfaceOrientation)uiOrientationFromDeviceOrientation: (UIDeviceOrientation) deviceOrientation
 {
     UIInterfaceOrientation ifOrientation;
@@ -553,6 +654,5 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
     return ifOrientation;
 }
-
 
 @end

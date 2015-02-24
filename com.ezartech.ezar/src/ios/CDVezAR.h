@@ -1,9 +1,9 @@
+// CDVezAR.h
 //
-//  CDVezAR.h
+// Copyright 2015, ezAR Technologies
+// All rights reserved.
 //
-//  Created by Wayne Parrott on 1/26/15.
-//
-//
+
 
 #import "Cordova/CDV.h"
 #import <AVFoundation/AVFoundation.h>
@@ -14,16 +14,27 @@
 @interface CDVezAR : CDVPlugin
 
 - (void) init:(CDVInvokedUrlCommand*)command;
+
 - (void) getCameras:(CDVInvokedUrlCommand*)command;
+
 - (void) activateCamera:(CDVInvokedUrlCommand*)command;
+
 - (void) deactivateCamera:(CDVInvokedUrlCommand*)command;
+
 - (void) startCamera:(CDVInvokedUrlCommand*)command;
+
 - (void) stopCamera:(CDVInvokedUrlCommand*)command;
+
 - (void) maxZoom:(CDVInvokedUrlCommand*)command;
+
 - (void) getZoom:(CDVInvokedUrlCommand*)command;
+
 - (void) setZoom:(CDVInvokedUrlCommand*)command;
+
 - (void) getLight:(CDVInvokedUrlCommand*)command;
+
 - (void) setLight:(CDVInvokedUrlCommand*)command;
+
 - (void) screenshot:(CDVInvokedUrlCommand*)command;
 
 @end
