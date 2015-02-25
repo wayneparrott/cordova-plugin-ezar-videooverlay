@@ -28,13 +28,16 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
         return _ezar.hasActiveCamera() && _ezar.getActiveCamera() === _self;
     }
     
+    
 	this.getId = function() {
 		return _id;
 	};
 	
+	
 	this.getPosition = function() {
 		return _position;
 	};
+	
 	
 //	getViewport = function() {
 //		return _viewport;
@@ -44,13 +47,16 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 //		
 //	}
 	
+	
 	this.hasLight = function() {
 		return _hasLight;
 	};
 	
+	
 	this.getLight = function() {
 		return _light;
 	};
+	
 	
 	this.setLight = function(light, successCB) {
 		if (!_self.hasLight()) return;
@@ -66,14 +72,17 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
         } 
 	};
 	
+	
 	//todo - test for haszoom
 	this.hasZoom = function() {
 		return _hasZoom;
 	};
 	
+	
 	this.getZoom = function() {
 		return _zoom;
 	};
+	
 	
 	this.setZoom = function(zoom) {
 		_zoom = zoom;
@@ -89,6 +98,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
         }
 	};
     
+	
     this.start = function(successCallback,errorCallback) {
         if (!_self.isStopped()) return;
         
@@ -110,6 +120,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
               _self.hasLight() ? _self.getLight() : 0]);
     };
     
+    
     this.stop = function(successCallback,errorCallback) {
         if (!_self.isRunning()) return;
         
@@ -130,10 +141,12 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
              []);
     };
     
+    
     this.isRunning = function() {
         return _self.isActive();
         //return _self.getState() == Camera.State.RUNNING;
     };
+    
     
     this.isStopped = function() {
         return !_self.isRunning();
@@ -150,7 +163,6 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
              "screenshot",
              []); 
 	};
-    
 	
 }
 

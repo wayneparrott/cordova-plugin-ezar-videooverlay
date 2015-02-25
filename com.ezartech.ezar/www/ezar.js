@@ -53,11 +53,12 @@ module.exports = (function() {
     var _backCamera;
     var _activeCamera;
     
+    
     _ezAR.isInitialized = function() {
         return _isInitialized;
     }
+   
     
-    //todo support errorCallback
     _ezAR.initialize = function(successCallback,errorCallback) {
         //execute successCallback immediately if already initialized
     	if (_ezAR.isInitialized()) {
@@ -87,6 +88,7 @@ module.exports = (function() {
             []);
     }
     
+    
     _ezAR.getCameras = function() {
         var cameras = [];
         if (_frontCamera) cameras.push(_frontCamera);
@@ -94,25 +96,31 @@ module.exports = (function() {
          return cameras;
     }
     
+    
     _ezAR.getBackCamera = function() {
          return _backCamera;
     }
+    
     
     _ezAR.hasBackCamera = function() {
          return !!_ezAR.getBackCamera();
     }
     
+    
     _ezAR.getFrontCamera = function() {
          return _frontCamera;
     }
+    
     
     _ezAR.hasFrontCamera = function() {
          return !!_ezAR.getFrontCamera();
     }
     
+    
     _ezAR.getActiveCamera = function() {
         return _activeCamera;
     }
+    
            
     _ezAR.hasActiveCamera = function() {
         return _ezAR.getActiveCamera() != null;
@@ -122,37 +130,15 @@ module.exports = (function() {
     //private, update ezar active camera
     _ezAR._activateCamera = function(camera) {
          _activeCamera = camera;  
-        
-        /*
-        if (!camera) return;
-        if (_ezAR.getActiveCamera() == camera) return;
-        
-        if (_ezAR.hasActiveCamera()) {
-            _ezAR.deactivateCamera();
-        }
-                  
-        _activeCamera = camera;
-        _ezAR.onError = errorCallback;
-                  
-          exec(function(data) {
-                 camera._setActive(true);
-                 console.log('activate success: ' + data);},
-           _ezAR.onError,
-           ezAR",
-           "activateCamera",
-           [camera.getPosition(),
-            camera.hasZoom() ? camera.getZoom() : 0,
-            camera.hasLight() ? camera.getLight() : 0]);
-        */
     }
+    
            
     //private - update ezar activate camera to undefined
     _ezAR._deactivateCamera = function() {
         _activeCamera = null;   
     }
     
-                  
-                       
+    
     return _ezAR;
     
 }());
