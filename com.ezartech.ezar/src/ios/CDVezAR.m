@@ -7,16 +7,17 @@
 #import "Cordova/CDV.h"
 #import <AVFoundation/AVFoundation.h>
 #import "CDVezAR.h"
+#import "CDVezARCameraViewController.h"
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 
 @implementation CDVezAR
 {
+    CDVezARCameraViewController* camController;
     AVCaptureSession *captureSession;
     AVCaptureDevice  *backVideoDevice, *frontVideoDevice, *videoDevice;
     AVCaptureDeviceInput *backVideoDeviceInput, *frontVideoDeviceInput, *videoDeviceInput;
     UIColor *bgColor;
-    AVCaptureVideoPreviewLayer *previewLayer;
 }
 
 
@@ -25,19 +26,12 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 {
     [super pluginInitialize];
     
-    UIDevice *device = [UIDevice currentDevice];
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];//Get the notification centre for the app
-    [nc addObserver:self											//Add ezar as an observer
-           selector:@selector(orientationChanged:)
-           name:UIDeviceOrientationDidChangeNotification
-           object:device];
-}
-
-
-//DEVICE ORIENTATION CHANGE HANDLER
-- (void)orientationChanged:(NSNotification *)note
-{
-    [self updatePreviewOrientation];
+    //UIDevice *device = [UIDevice currentDevice];
+    //NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];//Get the notification centre for the app
+    //[nc addObserver:self											//Add ezar as an observer
+    //       selector:@selector(orientationChanged:)
+    //       name:UIDeviceOrientationDidChangeNotification
+    //       object:device];
 }
 
 
@@ -48,11 +42,12 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 // 
 - (void)init:(CDVInvokedUrlCommand*)command
 {
+    //cache original webview background color for restoring later
+    bgColor = self.webView.backgroundColor;
+    
     //set main view background to black; otherwise white area appears during rotation
     self.viewController.view.backgroundColor = [UIColor blackColor];
  
- 	//cache original webview background color for restoring later
-    bgColor = self.webView.backgroundColor;
     
     // SETUP CAPTURE SESSION -----
     NSLog(@"Setting up capture session");
@@ -83,20 +78,14 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
         return  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
     
-    //ADD VIDEO PREVIEW LAYER
-    previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:captureSession] ;
-    [previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
-    previewLayer.frame = self.webView.frame;
+    //SETUP CameraViewController
+    camController =[[CDVezARCameraViewController alloc]
+                    initWithController: (CDVViewController*)self.viewController
+                    session: captureSession];
+    camController.view;
+
+    //self.webView.frame = webviewFrame;
     
-     UIView *cameraView = [[UIView alloc] init];
-    [[cameraView layer] addSublayer: previewLayer];
-    cameraView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
-    cameraView.frame = previewLayer.frame;
-    
-    //POSITION cameraview below the webview
-    [[self.webView superview] insertSubview:cameraView belowSubview: self.webView];
-   
-   
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
     
@@ -180,13 +169,13 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
         
     }
 
+    //SET WEBVIEW TRANSPARENT BACKGROUND
     self.webView.backgroundColor = [UIColor clearColor ];
+   
     
-    //----- START THE CAPTURE SESSION RUNNING -----
+    //START THE CAPTURE SESSION
     [captureSession startRunning];
-     
-    [self updatePreviewOrientation];
-     
+    
      CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -342,9 +331,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [deviceInfo setObject: @(screenWidth) forKey:@"displayWidth"];
     [deviceInfo setObject: @(screenHeight) forKey:@"displayHeight"];
 
-    //NSDictionary* result = [NSDictionary dictionaryWithDictionary: deviceInfo];
-    //return result;
-    
     return deviceInfo;
 }
 
@@ -508,22 +494,23 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 //
 //
 //
+/*
 - (void) updatePreviewOrientation
 {
-    if (previewLayer == nil) return;
+    //if (previewLayer == nil) return;
     
     UIInterfaceOrientation ifOrient = [self getUIInterfaceOrientation];
     BOOL shouldRotate = [self.viewController shouldAutorotateToInterfaceOrientation: ifOrient];
     if (shouldRotate) {
         // set the orientation of preview layer
         AVCaptureVideoOrientation orient = [self videoOrientationFromUIInterfaceOrientation: ifOrient];
-        [previewLayer.connection setVideoOrientation: orient];
+        //[previewLayer.connection setVideoOrientation: orient];
        // NSLog(@"Orientation has changed");
     } else {
         //NSLog(@"Orientation NOT changed");
     }
 }
-
+*/
 
 //
 //
@@ -554,105 +541,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     [errorData setObject: data  forKey:@"data"];
     
     return errorData;
-}
-
-
-//---------------- orientation utilties ----------------
-     
-- (UIDeviceOrientation) getDeviceOrientation
-{
-    return [[UIDevice currentDevice] orientation];
-}
-
-
-- (UIInterfaceOrientation)getUIInterfaceOrientation
-{
-    return [UIApplication sharedApplication].statusBarOrientation;
-}
-
-
-- (AVCaptureVideoOrientation)videoOrientationFromUIInterfaceOrientation: (UIInterfaceOrientation) ifOrientation
-{
-    AVCaptureVideoOrientation videoOrientation;
-    switch (ifOrientation) {
-        case UIInterfaceOrientationPortrait:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-            break;
-        case UIInterfaceOrientationPortraitUpsideDown:
-            videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-            break;
-        case UIInterfaceOrientationLandscapeRight:
-            videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-            break;
-        case UIInterfaceOrientationLandscapeLeft:
-            videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-            break;
-        default:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-    }
-    
-    return videoOrientation;
-}
-
-
-- (AVCaptureVideoOrientation)videoOrientationFromDeviceOrientation: (UIDeviceOrientation) deviceOrientation
-{
-    //[[UIApplication sharedApplication] statusBarOrientation];
-    
-    AVCaptureVideoOrientation videoOrientation;
-    
-    //UIDeviceOrientation deviceOrientation = [[UIDevice currentDevice] orientation];
-    switch (deviceOrientation) {
-        case UIDeviceOrientationPortrait:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-            break;
-        case UIDeviceOrientationPortraitUpsideDown:
-            videoOrientation = AVCaptureVideoOrientationPortraitUpsideDown;
-            break;
-        case UIDeviceOrientationLandscapeLeft:
-            // Not clear why but the landscape orientations are reversed
-            // if I use AVCaptureVideoOrientationLandscapeRight here the pic ends up upside down
-            videoOrientation = AVCaptureVideoOrientationLandscapeRight;
-            break;
-        case UIDeviceOrientationLandscapeRight:
-            // Not clear why but the landscape orientations are reversed
-            // if I use AVCaptureVideoOrientationLandscapeRight here the pic ends up upside down
-            videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
-            break;
-        default:
-            videoOrientation = AVCaptureVideoOrientationPortrait;
-    }
-    
-    return videoOrientation;
-}
-
-
-- (UIInterfaceOrientation)uiOrientationFromDeviceOrientation: (UIDeviceOrientation) deviceOrientation
-{
-    UIInterfaceOrientation ifOrientation;
-    
-    switch (deviceOrientation) {
-        case UIDeviceOrientationPortrait:
-            ifOrientation = UIInterfaceOrientationPortrait;
-            break;
-        case UIDeviceOrientationPortraitUpsideDown:
-            ifOrientation = UIInterfaceOrientationPortraitUpsideDown;
-            break;
-        case UIDeviceOrientationLandscapeLeft:
-            // Not clear why but the landscape orientations are reversed
-            // if I use AVCaptureVideoOrientationLandscapeRight here the pic ends up upside down
-            ifOrientation = UIInterfaceOrientationLandscapeRight;
-            break;
-        case UIDeviceOrientationLandscapeRight:
-            // Not clear why but the landscape orientations are reversed
-            // if I use AVCaptureVideoOrientationLandscapeRight here the pic ends up upside down
-            ifOrientation = UIInterfaceOrientationLandscapeLeft;
-            break;
-        default:
-            ifOrientation = UIInterfaceOrientationPortrait;
-    }
-    
-    return ifOrientation;
 }
 
 @end

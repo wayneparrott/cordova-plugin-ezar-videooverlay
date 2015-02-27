@@ -4,12 +4,8 @@
 // All rights reserved.
 //
 
-
-#import "Cordova/CDV.h"
 #import <AVFoundation/AVFoundation.h>
-
-#ifndef CDVezAR_h
-#define CDVezAR_h
+#import "Cordova/CDV.h"
 
 @interface CDVezAR : CDVPlugin
 
@@ -46,5 +42,3 @@ typedef NS_ENUM(NSInteger, EZAR_ERROR_CODE) {
     EZAR_ERROR_CODE_ACTIVATION
 };
 
-
-#endif

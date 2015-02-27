@@ -23,7 +23,10 @@
             </feature>
         </config-file>
         <header-file src="src/ios/CDVezAR.h" />
+        <header-file src="src/ios/CDVezARCameraViewController.h" /> 
         <source-file src="src/ios/CDVezAR.m" />
+        <source-file src="src/ios/CDVezARCameraViewController.m" />
+        
         <!-- <source-file src="src/ios/libezar.a" /> -->
         
         <framework src="UIKit.framework" />
