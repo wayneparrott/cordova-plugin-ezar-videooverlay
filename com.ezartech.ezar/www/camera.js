@@ -1,6 +1,31 @@
+/*
+ * Camera.js
+ * Copyright 2015, ezAR Technologies, ezartech.com
+ */
+
+
 var exec = require('cordova/exec'),
     utils = require('cordova/utils');
 
+/**
+ * Manages a mobile device camera
+ * @class
+ * 
+ * Created by ezar during initialization. Do not use directly.
+ * 
+ * @param {ezAR} ezar  protected 
+ * @param {string} id  unique camera id assigned by the device os
+ * @param {string} position  side of the device the camera resides, BACK
+ * 			faces away from the user, FRONT faces the user
+ * @param {boolean} hasZoom  true if the camera's magnification can be changed
+ * @param {float} zoom  current magnification level of the camera up 
+ * 			to the maxZoom
+ * @param {boolean} hasLight true when the device has a light on the
+ * 			same side as the camera position; false otherwise
+ * @param {integer} light  if the device has a light on the same side 
+ * 			(position) as the camera then 1 turns on the device light, 
+ * 			0 turns the light off
+ */
 var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 	var _ezar,
 	    _id,
@@ -22,50 +47,62 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
     _zoom = zoom;
     _hasLight = hasLight;
     _light = light;
-	
-    
+	    
+    /**
+     * @return {boolean} Test if this camera is currently running.
+     */
     this.isActive = function() {
         return _ezar.hasActiveCamera() && _ezar.getActiveCamera() === _self;
     }
-    
-    
+        
+    /**
+     * Camera's unique id assigned by the device.
+     * @return {string} 
+     */
 	this.getId = function() {
 		return _id;
 	};
 	
-	
+	/**
+	 * The side of the device on which the camera resides
+	 * 		BACK is the side of the device facing away from the user,
+	 *      FRONT is the side of the device facing the user.
+	 *  @return {string}
+	 */
 	this.getPosition = function() {
 		return _position;
 	};
 	
-	
-//	getViewport = function() {
-//		return _viewport;
-//	}
-//	
-//	setViewport = function(top, left, width, height) {
-//		
-//	}
-	
-	
+	/**
+	 * Identifies if the camera side of the device includes a light
+	 * @return {boolean} 
+	 */
 	this.hasLight = function() {
 		return _hasLight;
 	};
 	
-	
+	/**
+	 * The current light setting, 0 == off, 1 == on
+	 * @return {integer} 
+	 */
 	this.getLight = function() {
 		return _light;
 	};
 	
-	
-	this.setLight = function(light, successCB) {
+	/**
+	 * Turn the light on or off.
+	 * @param {integer} light 0 to turn light off, 1 to turn light on
+	 * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+	 */
+	this.setLight = function(light, successCB, errorCB) {
 		if (!_self.hasLight()) return;
 		
 		_light = light;
 		
         if (_self.isActive() && _self.isRunning()) {
-            exec(function() {console.log('success');},
-                 function(error) {console.log('error: ' + error); },
+            exec( successCB,
+                  errorCB,
                  "ezAR",
                  "setLight",
                  [_light]);
@@ -73,18 +110,29 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 	};
 	
 	
-	//todo - test for haszoom
+	/**
+	 * Camera supports magnification.
+	 * @return {boolean} true indicates the camera supports zooming; otherwise return false.
+	 */
 	this.hasZoom = function() {
 		return _hasZoom;
 	};
 	
-	
+	/**
+	 * Current magnification level
+	 * @return {float} a value between 1.0 and maxZoom
+	 */
 	this.getZoom = function() {
 		return _zoom;
 	};
 	
-	
-	this.setZoom = function(zoom) {
+	/**
+	 * Increase or decrease magnification
+	 * @param {float} zoom new magnification level, must be between 1.0 and maxZoom 
+	 * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+	 */
+	this.setZoom = function(zoom, successCB, errorCB) {
 		_zoom = zoom;
     
         console.log("zooming camera: " + _zoom);
@@ -97,9 +145,13 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
                  [_zoom]);
         }
 	};
-    
-	
-    this.start = function(successCallback,errorCallback) {
+
+	/**
+	 * Start video capture and presentation. This camera is the ezar#activeCamera
+	 * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+	 */
+	this.start = function(successCallback,errorCallback) {
         if (!_self.isStopped()) return;
         
         exec(function(data) {
@@ -120,7 +172,11 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
               _self.hasLight() ? _self.getLight() : 0]);
     };
     
-    
+	/**
+	 * Stop video capture and presentation. Update ezar#activeCamera to be null
+	 * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+	 */    
     this.stop = function(successCallback,errorCallback) {
         if (!_self.isRunning()) return;
         
@@ -141,20 +197,25 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
              []);
     };
     
-    
+    /**
+     * Check if camera is running.
+     * @return {boolean} 
+     */
     this.isRunning = function() {
         return _self.isActive();
-        //return _self.getState() == Camera.State.RUNNING;
     };
     
-    
+    /**
+     * Check if camera is stopped.
+     * @return {boolean} 
+     */
     this.isStopped = function() {
         return !_self.isRunning();
-        //return _self.getState() == Camera.State.STOPPED;
     };
     
     
-    this.screenshot = function(successCB, errorCB) {
+    /* does not yet work on ios
+     this.screenshot = function(successCB, errorCB) {
 		if (!_self.isActive()) return;
 		
         exec(function() {console.log('success');},
@@ -163,18 +224,8 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
              "screenshot",
              []); 
 	};
-	
+	*/
 }
-
-Camera.Position = {
-	FRONT: 'FRONT',
-	BACK : 'BACK'
-}
-
-Camera.State = {
-		STOPPED : 'STOPPED',
-		RUNNING : 'RUNNING',
-	}
 
 function isFunction(f) {
     return typeof f == "function";

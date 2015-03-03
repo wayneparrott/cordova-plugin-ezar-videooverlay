@@ -1,4 +1,7 @@
-
+/*
+ * ezar.js
+ * Copyright 2015, ezAR Technologies, ezartech.com
+ */
 
 var Camera = require('./camera'),
     exec = require('cordova/exec'),
@@ -53,12 +56,19 @@ module.exports = (function() {
     var _backCamera;
     var _activeCamera;
     
-    
+    /**
+     * Has ezAR been successfully initialized.
+     * @return {boolean} true when initialize() completes successfully
+     */
     _ezAR.isInitialized = function() {
         return _isInitialized;
     }
    
-    
+    /**
+     * Initialize ezAR internal state, cameras, light and zoom features.
+     * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+     */
     _ezAR.initialize = function(successCallback,errorCallback) {
         //execute successCallback immediately if already initialized
     	if (_ezAR.isInitialized()) {
@@ -88,7 +98,10 @@ module.exports = (function() {
             []);
     }
     
-    
+    /**
+     * Return Camera[]. Must call initialize() before calling this function.
+     * @return {Camera[]} array of cameras detected 
+     */
     _ezAR.getCameras = function() {
         var cameras = [];
         if (_frontCamera) cameras.push(_frontCamera);
@@ -96,32 +109,54 @@ module.exports = (function() {
          return cameras;
     }
     
-    
+    /**
+     * The camera facing away from the user. The camera has position BACK. 
+     * @return {Camera} null the device does not have a BACK position camera or if ezAR has no been initialized
+     */
     _ezAR.getBackCamera = function() {
          return _backCamera;
     }
     
     
+    /**
+     * Test for a camera facing away from the user. Call initialize() before using this function.
+     * @return {boolean} true when the device has a camera with position BACK; otherwise return false.
+     */
     _ezAR.hasBackCamera = function() {
          return !!_ezAR.getBackCamera();
     }
     
     
+    /**
+     * The camera facing towards the user. The camera has position FRONT. 
+     * @return {Camera} null the device does not have a FRONT position camera or if ezAR has no been initialized
+     */
     _ezAR.getFrontCamera = function() {
          return _frontCamera;
     }
     
-    
+    /**
+     * Test for a camera facing towards the user. Call initialize() before using this function.
+     * @return {boolean} true when the device has a camera with position FRONT; otherwise return false.
+     */    
     _ezAR.hasFrontCamera = function() {
          return !!_ezAR.getFrontCamera();
     }
     
-    
+    /**
+     * The camera currently running or null.
+     * Call initialize() before using this function. 
+     * @return {Camera} 
+     */
     _ezAR.getActiveCamera = function() {
         return _activeCamera;
     }
     
-           
+    /**
+     * Test for a running camera.
+     * Call initialize() before using this function. 
+     * @return {boolean} 
+     */           
     _ezAR.hasActiveCamera = function() {
         return _ezAR.getActiveCamera() != null;
     }

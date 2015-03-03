@@ -83,14 +83,14 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
                     initWithController: (CDVViewController*)self.viewController
                     session: captureSession];
     camController.view;
-
-    //self.webView.frame = webviewFrame;
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
     
+    [self forceWebViewRedraw];
+    
     //ACCESS DEVICE INFO: CAMERAS, ...
-    NSDictionary* deviceInfoResult = [self getDeviceInfo];
+    NSDictionary* deviceInfoResult = [self basicGetDeviceInfo];
     
     CDVPluginResult* pluginResult =
         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary: deviceInfoResult];
@@ -104,7 +104,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 //
 - (void)getCameras:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* cameras = [self getCameras];
+    NSDictionary* cameras = [self basicGetCameras];
     
     CDVPluginResult* pluginResult =
         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary: cameras];
@@ -297,7 +297,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 
 
 //
-//
+// Does not work :(
 //
 - (void)imageSavedToPhotosAlbum:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo {
     NSString *message;
@@ -320,9 +320,10 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 
 //---------------------------------------------------------------
 //
-- (NSDictionary*)getDeviceInfo
+- (NSDictionary*)basicGetDeviceInfo
 {
-    NSMutableDictionary* deviceInfo = [NSMutableDictionary dictionaryWithDictionary: [self getCameras]];
+    NSMutableDictionary* deviceInfo = 
+    	[NSMutableDictionary dictionaryWithDictionary: [self basicGetCameras]];
 
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     CGFloat screenWidth = screenRect.size.width;
@@ -338,16 +339,16 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 //
 //
 //
-- (NSDictionary*)getCameras
+- (NSDictionary*)basicGetCameras
 {
     NSMutableDictionary* cameraInfo = [NSMutableDictionary dictionaryWithCapacity:4];
 
     NSArray *cameras = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
     for (AVCaptureDevice *camera in cameras) {
         if ([camera position] == AVCaptureDevicePositionFront) {
-            [cameraInfo setObject: [self getCameraProps: camera]  forKey:@"FRONT"];
+            [cameraInfo setObject: [self basicGetCameraProps: camera]  forKey:@"FRONT"];
         } else if ([camera position] == AVCaptureDevicePositionBack) {
-            [cameraInfo setObject: [self getCameraProps: camera]  forKey:@"BACK"];
+            [cameraInfo setObject: [self basicGetCameraProps: camera]  forKey:@"BACK"];
         }
     }
 
@@ -358,7 +359,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 //
 //
 //
-- (NSDictionary*)getCameraProps: (AVCaptureDevice *)camera
+- (NSDictionary*)basicGetCameraProps: (AVCaptureDevice *)camera
 {
     NSMutableDictionary* cameraProps = [NSMutableDictionary dictionaryWithCapacity:4];
     [cameraProps setObject: camera.uniqueID forKey:@"id"];
@@ -490,28 +491,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     }
 }
 
-
-//
-//
-//
-/*
-- (void) updatePreviewOrientation
-{
-    //if (previewLayer == nil) return;
-    
-    UIInterfaceOrientation ifOrient = [self getUIInterfaceOrientation];
-    BOOL shouldRotate = [self.viewController shouldAutorotateToInterfaceOrientation: ifOrient];
-    if (shouldRotate) {
-        // set the orientation of preview layer
-        AVCaptureVideoOrientation orient = [self videoOrientationFromUIInterfaceOrientation: ifOrient];
-        //[previewLayer.connection setVideoOrientation: orient];
-       // NSLog(@"Orientation has changed");
-    } else {
-        //NSLog(@"Orientation NOT changed");
-    }
-}
-*/
-
 //
 //
 //
@@ -524,7 +503,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
     return errorData;
 }
-
 
 //
 //
@@ -543,4 +521,8 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return errorData;
 }
 
+- (void)forceWebViewRedraw 
+{
+	//[self.webview stringByEvaluatingJavaScriptFromString: jsstring];
+}
 @end

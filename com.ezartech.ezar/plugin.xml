@@ -10,7 +10,6 @@
         <clobbers target="ezar" />
     </js-module>
     
- 
     <js-module src="www/camera.js" name="camera">
         <clobbers target="camera" />
     </js-module>
@@ -32,7 +31,16 @@
         <framework src="UIKit.framework" />
     	<framework src="Foundation.framework" />
     	<framework src="AVFoundation.framework" />
-        
     </platform>
 
+	<!-- android -->
+	<platform name="android">
+      <config-file parent="/*" target="res/xml/config.xml">
+         <feature name="ezAR">
+            <param name="android-package" value="com.ezartech.ezar.ezAR" />
+         </feature>
+      </config-file>
+      <config-file parent="/*" target="AndroidManifest.xml" />
+      <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/ezAR" />
+   </platform>
 </plugin>
