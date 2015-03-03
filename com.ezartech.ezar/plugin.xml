@@ -1,35 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
-      id="com.ezartech.ezar"
-      version="0.1.0">
-      
-    <name>ezAR</name>
-
-    <js-module src="www/ezar.js" name="ezar">
-        <clobbers target="ezar" />
-    </js-module>
-    
- 
-    <js-module src="www/camera.js" name="camera">
-        <clobbers target="camera" />
-    </js-module>
-    
-    <!-- ios -->
-    <platform name="ios">
-        <config-file target="config.xml" parent="/*">
-            <feature name="ezAR">
-                <param name="ios-package" value="CDVezAR"/>
-            </feature>
-        </config-file>
-        <header-file src="src/ios/CDVezAR.h" />
-        <source-file src="src/ios/CDVezAR.m" />
-        <!-- <source-file src="src/ios/libezar.a" /> -->
-        
-        <framework src="UIKit.framework" />
-    	<framework src="Foundation.framework" />
-    	<framework src="AVFoundation.framework" />
-        
-    </platform>
-
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0" id="com.ezartech.ezar" version="0.1.0">
+   <name>ezAR</name>
+   <js-module name="ezar" src="www/ezar.js">
+      <clobbers target="ezar" />
+   </js-module>
+   <js-module name="camera" src="www/camera.js">
+      <clobbers target="camera" />
+   </js-module>
+   <platform name="ios">
+      <config-file parent="/*" target="config.xml">
+         <feature name="ezAR">
+            <param name="ios-package" value="CDVezAR" />
+         </feature>
+      </config-file>
+      <header-file src="src/ios/CDVezAR.h" />
+      <source-file src="src/ios/CDVezAR.m" />
+      <framework src="UIKit.framework" />
+      <framework src="Foundation.framework" />
+      <framework src="AVFoundation.framework" />
+   </platform>
+   <platform name="android">
+      <config-file parent="/*" target="res/xml/config.xml">
+         <feature name="ezAR">
+            <param name="android-package" value="com.ezartech.ezar.ezAR" />
+         </feature>
+      </config-file>
+      <config-file parent="/*" target="AndroidManifest.xml" />
+      <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/ezAR" />
+   </platform>
 </plugin>
