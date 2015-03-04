@@ -1,6 +1,12 @@
-/*
+/**
  * ezar.js
  * Copyright 2015, ezAR Technologies, ezartech.com
+ * All rights reserved.
+ * 
+ * @file Implements the ezar api for controlling device cameras, 
+ *  zoom level and lighting. 
+ * @author Wayne Parrott [wayne@ezartech.com]
+ * @version 0.1.0 
  */
 
 var Camera = require('./camera'),
@@ -9,46 +15,7 @@ var Camera = require('./camera'),
 
 module.exports = (function() {
            
-    function isFunction(f) {
-        return typeof f == "function";
-    }
-           
-    function _onError(data) {
-        if (isFunction(_ezAR.onError)) {
-           _ezAR.onError(data);
-        }
-    }
-                  
-    function initCamera(cameraData) {
-        var id = cameraData.id;
-        var position = cameraData.position;
-        var zoom = cameraData.zoom
-        var maxZoom = cameraData.maxZoom;
-        var hasLight = cameraData.light;
-        var lightLevel = hasLight ? cameraData.lightLevel : 0;
-        var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom,hasLight,lightLevel);
-                  
-                  console.log("camera: " + camera);
-                  console.log(camera);
-                  
-        return camera;
-    }
-                  
-    function initCameras(deviceData) {
-        CAMS = deviceData;
-        console.log(deviceData);
-                  
-        if ('FRONT' in deviceData) {
-            _frontCamera = initCamera(deviceData.FRONT);
-            console.log('front'); console.log(_frontCamera);
-        }
-        if ('BACK' in deviceData) {
-            _backCamera = initCamera(deviceData.BACK);
-            console.log('back'); console.log(_backCamera);
-        }
-    }
-           
-    //--------------------------------------
+	 //--------------------------------------
     var _ezAR = {};
     var errorHandler;
     var _isInitialized = false;
@@ -160,19 +127,61 @@ module.exports = (function() {
     _ezAR.hasActiveCamera = function() {
         return _ezAR.getActiveCamera() != null;
     }
-           
     
-    //private, update ezar active camera
+    
+    //PROTECTED ------------
+
+    //protected, update ezar active camera
     _ezAR._activateCamera = function(camera) {
          _activeCamera = camera;  
     }
     
            
-    //private - update ezar activate camera to undefined
+    //protected - update ezar activate camera to undefined
     _ezAR._deactivateCamera = function() {
         _activeCamera = null;   
     }
     
+    //PRIVATE---------------
+    
+    function isFunction(f) {
+        return typeof f == "function";
+    }
+           
+    function _onError(data) {
+        if (isFunction(_ezAR.onError)) {
+           _ezAR.onError(data);
+        }
+    }
+                  
+    function initCamera(cameraData) {
+        var id = cameraData.id;
+        var position = cameraData.position;
+        var zoom = cameraData.zoom
+        var maxZoom = cameraData.maxZoom;
+        var hasLight = cameraData.light;
+        var lightLevel = hasLight ? cameraData.lightLevel : 0;
+        var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom,hasLight,lightLevel);
+                  
+                  console.log("camera: " + camera);
+                  console.log(camera);
+                  
+        return camera;
+    }
+                  
+    function initCameras(deviceData) {
+        CAMS = deviceData;
+        console.log(deviceData);
+                  
+        if ('FRONT' in deviceData) {
+            _frontCamera = initCamera(deviceData.FRONT);
+            console.log('front'); console.log(_frontCamera);
+        }
+        if ('BACK' in deviceData) {
+            _backCamera = initCamera(deviceData.BACK);
+            console.log('back'); console.log(_backCamera);
+        }
+    }
     
     return _ezAR;
     

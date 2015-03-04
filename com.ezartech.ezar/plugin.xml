@@ -1,3 +1,8 @@
+<!--
+ ezAR Cordova plugin manifest
+ ezartech.com
+-->
+
 <?xml version="1.0" encoding="UTF-8"?>
 
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
@@ -5,7 +10,11 @@
       version="0.1.0">
       
     <name>ezAR</name>
+    <description>AR foundation, overlay cordova webview on a live video preview with front & back camera control</description>
+    <keywords>augmented reality,video preview,overlay,computer vision</keywords>
+    <license>ezAR Free Use License, see http:ezartech.com/eula.html</license>
 
+	<!-- web api -->
     <js-module src="www/ezar.js" name="ezar">
         <clobbers target="ezar" />
     </js-module>
@@ -26,8 +35,6 @@
         <source-file src="src/ios/CDVezAR.m" />
         <source-file src="src/ios/CDVezARCameraViewController.m" />
         
-        <!-- <source-file src="src/ios/libezar.a" /> -->
-        
         <framework src="UIKit.framework" />
     	<framework src="Foundation.framework" />
     	<framework src="AVFoundation.framework" />
@@ -43,4 +50,5 @@
       <config-file parent="/*" target="AndroidManifest.xml" />
       <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/ezAR" />
    </platform>
+   
 </plugin>
