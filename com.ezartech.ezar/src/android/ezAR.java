@@ -1,5 +1,7 @@
 package com.ezartech.ezar;
 
+import java.io.IOException;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -9,7 +11,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
@@ -25,22 +30,34 @@ public class ezAR extends CordovaPlugin {
 	
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
-    	Log.v(TAG, "initialize 1");
     	super.initialize(cordova, webView);
-    	Log.v(TAG, "initialize 2");
     }
     
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-    	Log.v(TAG, action + " " + args.length() + " - " + action.equals("startCamera"));
+    	Log.v(TAG, action + " " + args.length());
     	
         if (action.equals("init")) {            
             this.init(callbackContext);
             return true;
         } else if (action.equals("startCamera")) {
+        	Log.v(TAG, action + " " + args);
+        	
         	this.startCamera(
-        			getDoubleOrNull(args, 0), getDoubleOrNull(args, 1), getDoubleOrNull(args, 2));  
+        			args.getString(0), 
+        			getDoubleOrNull(args, 1), 
+        			getDoubleOrNull(args, 2),
+        			callbackContext);
+
         	return true;
+        } else if (action.equals("stopCamera")) {
+        	try {
+				videoOverlay.stopRecording();
+				
+				callbackContext.success();
+			} catch (IOException e) {
+				callbackContext.error("PROBLEM " + e.getMessage());
+			}
         }
         return false;
     }
@@ -61,8 +78,12 @@ public class ezAR extends CordovaPlugin {
 	private void init(final CallbackContext callbackContext) {
         JSONObject jsonObject = new JSONObject();
         try {
-			jsonObject.put("displayWidth", 100);
-			jsonObject.put("displayHeight", 100);
+        	Display display = cordova.getActivity().getWindowManager().getDefaultDisplay();
+        	DisplayMetrics m = new DisplayMetrics(); 
+        	display.getMetrics(m);
+        	
+			jsonObject.put("displayWidth", m.widthPixels);
+			jsonObject.put("displayHeight", m.heightPixels);
 			
             int mNumberOfCameras = Camera.getNumberOfCameras();
             
@@ -72,6 +93,17 @@ public class ezAR extends CordovaPlugin {
             Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
             for (int i = 0; i < mNumberOfCameras; i++) {
                 Camera.getCameraInfo(i, cameraInfo);
+
+                Parameters parameters;
+                Camera open = null;
+                try {
+					open = Camera.open(i);
+					parameters = open.getParameters();
+                } finally {
+                	if (open != null) {
+                		open.release();
+                	}
+                }
                 
                 Log.v(TAG, "Camera facing:" + cameraInfo.facing);
                 
@@ -83,7 +115,14 @@ public class ezAR extends CordovaPlugin {
                 }
                 
                 if (type != null) {
-        			JSONObject jsonCamera = new JSONObject(); 
+        			JSONObject jsonCamera = new JSONObject();
+        			jsonCamera.put("id", i);
+        			jsonCamera.put("position", type);
+        			jsonCamera.put("zoom", parameters.getZoom());
+        			jsonCamera.put("maxZoom", parameters.getMaxZoom());
+        			jsonCamera.put("light", false);
+        			jsonCamera.put("lightLevel", 0.);
+        		        
         			jsonObject.put(type, jsonCamera);
                 }
             }
@@ -99,7 +138,6 @@ public class ezAR extends CordovaPlugin {
                 // webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
                 videoOverlay = new VideoOverlay(cordova.getActivity());
-                videoOverlay.setCameraFacing("BACK");
 
                 try {                	               	
                 	// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
@@ -126,9 +164,13 @@ public class ezAR extends CordovaPlugin {
 		callbackContext.success(jsonObject);
     }
     
-    private void startCamera(double pos, double zoom, double light) {
-    	Log.v(TAG, "startCamera " + pos + "," + zoom + "," + light);
-    	videoOverlay.startRecording();
+    private void startCamera(String type, double zoom, double light, CallbackContext callbackContext) {
+    	videoOverlay.startRecording(type, zoom, light);
+
     	Log.v(TAG, "startRecording DONE");
+    	
+    	if (callbackContext != null) {
+    		callbackContext.success();
+    	}
     }
 }

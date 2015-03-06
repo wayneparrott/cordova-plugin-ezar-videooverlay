@@ -14,9 +14,6 @@ public class VideoOverlay extends ViewGroup {
     private Camera camera = null;
     private Camera.Size currentSize;
     private boolean recording = false;
-    private int cameraFacing = Camera.CameraInfo.CAMERA_FACING_BACK;
-    private boolean inPreview = false;
-    private boolean viewIsAttached = false;
 
     public VideoOverlay(Context context) {
         super(context);
@@ -40,13 +37,37 @@ public class VideoOverlay extends ViewGroup {
         return recording;
     }
 
-    public void startRecording() {
+    public void startRecording(String facing, double zoom, double light) {
         if (isRecording()) {
-            Log.d(TAG, "Already Recording!");
-            return;
+            try {
+				stopRecording();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
 
-        initCamera();
+        final int cameraFacing = Facing.valueOf(facing).getCameraInfoFacing();
+        
+        // Find the total number of cameras available
+        int mNumberOfCameras = Camera.getNumberOfCameras();
+        
+        Log.v(TAG, "Cameras:" + mNumberOfCameras);
+        
+        // Find the ID of the back-facing ("default") camera
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        for (int i = 0; i < mNumberOfCameras; i++) {
+            Camera.getCameraInfo(i, cameraInfo);
+
+            Log.v(TAG, "Camera facing:" + cameraInfo.facing);
+            
+            if (cameraInfo.facing == cameraFacing) {
+                camera = Camera.open(i);
+            }
+        }
+
+        if (camera == null) {
+        	camera = Camera.open(mNumberOfCameras - 1);
+        }
 
         if (camera == null) {
             throw new NullPointerException("Cannot start recording, we don't have a camera!");
@@ -58,6 +79,12 @@ public class VideoOverlay extends ViewGroup {
             setCameraParameters(camera, cameraParameters);
         }
 
+        try {
+            preview.attach(camera);
+        } catch (IOException e) {
+            Log.e(TAG, "Unable to attach preview to camera!", e);
+        }
+
         camera.startPreview();
         recording = true;
 
@@ -67,55 +94,13 @@ public class VideoOverlay extends ViewGroup {
         Log.d(TAG, "stopRecording called");
 
         camera.stopPreview();
+        camera.release();
 
         recording = false;
     }
 
-    private void initCamera(){
-        if (camera == null) {
-            // Find the total number of cameras available
-            int mNumberOfCameras = Camera.getNumberOfCameras();
-            
-            Log.v(TAG, "Cameras:" + mNumberOfCameras);
-            
-            // Find the ID of the back-facing ("default") camera
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            for (int i = 0; i < mNumberOfCameras; i++) {
-                Camera.getCameraInfo(i, cameraInfo);
-                
-                Log.v(TAG, "Camera facing:" + cameraInfo.facing);
-                
-                if (cameraInfo.facing == cameraFacing) {
-                    camera = Camera.open(i);
-                    return;
-                }
-            }
-            
-            camera = Camera.open(mNumberOfCameras - 1);
-        }
-    }
-
-    void previewAvailable(){
-        viewIsAttached = true;
-        initCamera();
-        if(camera != null) {
-            try {
-                preview.attach(camera);
-            } catch (IOException e) {
-                Log.e(TAG, "Unable to attach preview to camera!", e);
-            }
-        }
-    }
-
-    public void initPreview(int height, int width) {
-        if (camera != null) {
-            Camera.Parameters parameters = camera.getParameters();
-
-            setCameraParameters(camera, parameters);
-
-            camera.startPreview();
-            inPreview = true;
-        }
+    void previewAvailable() {
+        
     }
 
     private void setCameraParameters(Camera camera, Camera.Parameters parameters){
@@ -127,64 +112,26 @@ public class VideoOverlay extends ViewGroup {
 		
 		currentSize = size;
         parameters.setPreviewSize(currentSize.width, currentSize.height);
-
-        // parameters.setRotation(90);
+        // parameters.setRotation(0);
 
         camera.setParameters(parameters);
-        camera.setDisplayOrientation(90);
-    }
-
-    public void startPreview(boolean startRecording){
-        if(!inPreview) {
-            if(preview != null && !viewIsAttached ) {
-                preview.startRecordingWhenAvailable(startRecording);
-                addView(preview.getView());
-            } else {
-                previewAvailable();
-                initPreview(getHeight(), getWidth());
-                if (startRecording)
-                    startRecording();
-                inPreview = true;
-            }
-        }
-    }
-
-    public void stopPreview() {
-        Log.d(TAG, "stopPreview called");
-        if (inPreview && camera != null) {
-            camera.setPreviewCallback(null);
-            camera.stopPreview();
-        }
-
-        if(camera != null) {
-            camera.lock();
-            camera.release();
-            camera = null;
-        }
-
-        inPreview = false;
-    }
-
-    public void setCameraFacing(String cameraFace) {
-        cameraFacing = ( cameraFace.equalsIgnoreCase("FRONT") ? Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK );
+        // camera.setDisplayOrientation(0);
     }
 
     public void onResume() {
         addView(preview.getView());
-
-        viewIsAttached = true;
     }
 
     public void onPause() {
         try {
             Log.d(TAG, "onPause called");
             stopRecording();
-            stopPreview();
-            preview.startRecordingWhenAvailable(false);
+
             Log.d(TAG, "removing View");
-            if(preview != null)
+            if(preview != null) {
                 removeView(preview.getView());
-            viewIsAttached = false;
+            }
+
         } catch (IOException e) {
             Log.e(TAG, "Error in OnPause - Could not stop camera", e);
         }

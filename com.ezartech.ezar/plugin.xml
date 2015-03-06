@@ -51,6 +51,7 @@
       <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar" />
       <source-file src="src/android/PreviewView.java" target-dir="src/com/ezartech/ezar" />
       <source-file src="src/android/VideoOverlay.java" target-dir="src/com/ezartech/ezar" />
+      <source-file src="src/android/Facing.java" target-dir="src/com/ezartech/ezar" />
    </platform>
    
 </plugin>
