@@ -17,7 +17,6 @@ import android.util.Log;
 import android.view.Display;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.RelativeLayout;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -26,11 +25,42 @@ public class ezAR extends CordovaPlugin {
 	private static final String TAG = "ezAR";
 	
     private VideoOverlay videoOverlay;
-    private RelativeLayout relativeLayout;
 	
     @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    public void initialize(final CordovaInterface cordova, final CordovaWebView webView) {
     	super.initialize(cordova, webView);
+    	
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {           	
+                webView.setKeepScreenOn(true);
+                webView.setBackgroundColor(0x00000000); // transparent RGB
+                // webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+
+                videoOverlay = new VideoOverlay(cordova.getActivity());
+
+                try {                	               	
+                	// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
+                	ViewGroup vg = (ViewGroup) webView.getParent();
+                	vg.removeView(webView);
+
+                    cordova.getActivity().setContentView(videoOverlay, 
+                    		new ViewGroup.LayoutParams(
+                    				LayoutParams.MATCH_PARENT, 
+                    				LayoutParams.MATCH_PARENT));
+
+                    cordova.getActivity().addContentView(webView, 
+                    		new ViewGroup.LayoutParams(
+                    				LayoutParams.WRAP_CONTENT, 
+                    				LayoutParams.WRAP_CONTENT));
+                } catch(Exception e) {
+                    Log.e(TAG, "Error during preview create", e);
+                    // callbackContext.error(TAG + ": " + e.getMessage());
+                }
+                
+            }
+        });
+
     }
     
     @Override
@@ -58,9 +88,30 @@ public class ezAR extends CordovaPlugin {
 			} catch (IOException e) {
 				callbackContext.error("PROBLEM " + e.getMessage());
 			}
+        } else if (action.equals("setZoom")) {
+        	videoOverlay.setZoom(getIntOrNull(args, 0));
+
+			callbackContext.success();
+        } else if (action.equals("setLight")) {
+        	videoOverlay.setLight(getIntOrNull(args, 0));
+        	
+        	callbackContext.success();
         }
         return false;
     }
+
+    private static int getIntOrNull(JSONArray args, int i) {
+		if (args.isNull(i)) {
+			return Integer.MIN_VALUE;
+		}
+
+		try {
+			return args.getInt(i);
+		} catch (JSONException e) {
+			Log.e(TAG, "Can't get double", e);
+			throw new RuntimeException(e);
+		}
+	}
 
     private static double getDoubleOrNull(JSONArray args, int i) {
 		if (args.isNull(i)) {
@@ -129,38 +180,7 @@ public class ezAR extends CordovaPlugin {
 		} catch (JSONException e) {
 			Log.e(TAG, "Can't set exception", e);
 		}
-                
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {           	
-                webView.setKeepScreenOn(true);
-                webView.setBackgroundColor(0x00000000); // transparent RGB
-                // webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
-                videoOverlay = new VideoOverlay(cordova.getActivity());
-
-                try {                	               	
-                	// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
-                	ViewGroup vg = (ViewGroup) webView.getParent();
-                	vg.removeView(webView);
-
-                    cordova.getActivity().setContentView(videoOverlay, 
-                    		new ViewGroup.LayoutParams(
-                    				LayoutParams.MATCH_PARENT, 
-                    				LayoutParams.MATCH_PARENT));
-
-                    cordova.getActivity().addContentView(webView, 
-                    		new ViewGroup.LayoutParams(
-                    				LayoutParams.WRAP_CONTENT, 
-                    				LayoutParams.WRAP_CONTENT));
-                } catch(Exception e) {
-                    Log.e(TAG, "Error during preview create", e);
-                    callbackContext.error(TAG + ": " + e.getMessage());
-                }
-                
-            }
-        });
-        
 		callbackContext.success(jsonObject);
     }
     

@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -142,4 +143,18 @@ public class VideoOverlay extends ViewGroup {
 
         onPause();
     }
+
+	public void setZoom(int doubleOrNull) {
+		Parameters parameters = camera.getParameters();
+		parameters.setZoom(doubleOrNull);
+		camera.setParameters(parameters);
+	}
+
+	public void setLight(int intOrNull) {
+		Parameters parameters = camera.getParameters();
+		parameters.setFlashMode(intOrNull == 1 ? 
+				Parameters.FLASH_MODE_ON :
+				Parameters.FLASH_MODE_OFF);
+		camera.setParameters(parameters);
+	}
 }
