@@ -153,7 +153,7 @@ public class VideoOverlay extends ViewGroup {
 	public void setLight(int intOrNull) {
 		Parameters parameters = camera.getParameters();
 		parameters.setFlashMode(intOrNull == 1 ? 
-				Parameters.FLASH_MODE_ON :
+				Parameters.FLASH_MODE_TORCH :
 				Parameters.FLASH_MODE_OFF);
 		camera.setParameters(parameters);
 	}
