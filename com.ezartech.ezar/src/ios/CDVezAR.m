@@ -25,6 +25,16 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 {
     [super pluginInitialize];
     
+<<<<<<< HEAD
+=======
+    //todo: wayne - remove this code as it is handled in the controller
+    //UIDevice *device = [UIDevice currentDevice];
+    //NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];//Get the notification centre for the app
+    //[nc addObserver:self											//Add ezar as an observer
+    //       selector:@selector(orientationChanged:)
+    //       name:UIDeviceOrientationDidChangeNotification
+    //       object:device];
+>>>>>>> branch 'master' of https://github.com/ezartech/com.ezartech.ezar.git
 }
 
 // SETUP EZAR 
@@ -520,6 +530,9 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
          "setTimeout(function(){document.body.style.display='block'},10);";
     
 	[self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+<<<<<<< HEAD
 
+=======
+>>>>>>> branch 'master' of https://github.com/ezartech/com.ezartech.ezar.git
 }
 @end

@@ -1,8 +1,13 @@
 /*
  * Camera.js
  * Copyright 2015, ezAR Technologies, ezartech.com
+ * All rights reserved.
+ * 
+ * @file Implements the ezar camera api for controlling device cameras, 
+ *  zoom level and lighting. 
+ * @author Wayne Parrott [wayne@ezartech.com]
+ * @version 0.1.0 
  */
-
 
 var exec = require('cordova/exec'),
     utils = require('cordova/utils');

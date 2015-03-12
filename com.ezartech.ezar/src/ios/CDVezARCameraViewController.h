@@ -15,5 +15,4 @@
 -(CDVezARCameraViewController*) initWithController: (CDVViewController*) mainViewController
                                            session:(AVCaptureSession*) captureSession;
 
-
 @end
