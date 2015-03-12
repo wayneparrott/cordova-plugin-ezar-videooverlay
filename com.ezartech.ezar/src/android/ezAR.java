@@ -29,7 +29,7 @@ public class ezAR extends CordovaPlugin {
     @Override
     public void initialize(final CordovaInterface cordova, final CordovaWebView webView) {
     	super.initialize(cordova, webView);
-    	
+
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {           	
@@ -60,9 +60,8 @@ public class ezAR extends CordovaPlugin {
                 
             }
         });
-
     }
-    
+
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
     	Log.v(TAG, action + " " + args.length());
@@ -89,13 +88,9 @@ public class ezAR extends CordovaPlugin {
 				callbackContext.error("PROBLEM " + e.getMessage());
 			}
         } else if (action.equals("setZoom")) {
-        	videoOverlay.setZoom(getIntOrNull(args, 0));
-
-			callbackContext.success();
+        	videoOverlay.setZoom(getIntOrNull(args, 0), callbackContext);
         } else if (action.equals("setLight")) {
-        	videoOverlay.setLight(getIntOrNull(args, 0));
-        	
-        	callbackContext.success();
+        	videoOverlay.setLight(getIntOrNull(args, 0), callbackContext);
         }
         return false;
     }
@@ -158,23 +153,23 @@ public class ezAR extends CordovaPlugin {
                 
                 Log.v(TAG, "Camera facing:" + cameraInfo.facing);
                 
-                String type = null;
-                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                	type = "BACK";
-                } else if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                	type = "FRONT";
+                Facing type = null;
+                for (Facing f : Facing.values()) {
+                	if (f.getCameraInfoFacing() == cameraInfo.facing) {
+                		type = f;
+                	}
                 }
-                
+
                 if (type != null) {
         			JSONObject jsonCamera = new JSONObject();
         			jsonCamera.put("id", i);
-        			jsonCamera.put("position", type);
+        			jsonCamera.put("position", type.toString());
         			jsonCamera.put("zoom", parameters.getZoom());
         			jsonCamera.put("maxZoom", parameters.getMaxZoom());
         			jsonCamera.put("light", false);
         			jsonCamera.put("lightLevel", 0.);
         		        
-        			jsonObject.put(type, jsonCamera);
+        			jsonObject.put(type.toString(), jsonCamera);
                 }
             }
 		} catch (JSONException e) {
@@ -185,12 +180,39 @@ public class ezAR extends CordovaPlugin {
     }
     
     private void startCamera(String type, double zoom, double light, CallbackContext callbackContext) {
-    	videoOverlay.startRecording(type, zoom, light);
+    	videoOverlay.startRecording(Facing.valueOf(type), zoom, light);
 
     	Log.v(TAG, "startRecording DONE");
     	
     	if (callbackContext != null) {
     		callbackContext.success();
     	}
+    }
+    
+    @Override
+    public void onPause(boolean multitasking) {
+    	super.onPause(multitasking);
+
+    	Log.v(TAG, "onPause");
+    	videoOverlay.onPause();
+    	Log.v(TAG, "onPause DONE");
+    }
+
+    @Override
+    public void onResume(boolean multitasking) {
+    	super.onResume(multitasking);
+    	
+    	Log.v(TAG, "onResume");
+    	videoOverlay.onResume();
+    	Log.v(TAG, "onResume DONE");
+    }
+
+    @Override
+    public void onDestroy() {
+    	super.onDestroy();
+
+    	Log.v(TAG, "onDestroy");
+    	videoOverlay.onDestroy();
+    	Log.v(TAG, "onDestroy DONE");
     }
 }
