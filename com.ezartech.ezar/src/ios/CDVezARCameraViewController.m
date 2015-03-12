@@ -20,7 +20,31 @@
     _mainController = mainViewController;
     _captureSession = captureSession;
     
+    //register for CAPTURESESSIONSTARTED events
+    //see captureSessionStarted for explanation
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc addObserver:self
+          selector:@selector(captureSessionStarted:)
+           name:AVCaptureSessionDidStartRunningNotification
+           object:_captureSession];
+    
     return self;
+}
+
+//********** CAPTURE SESSION STARTED **********
+//HACK: set video preview orientation when the 1st capture session starts.
+//      Earlier attempts to set video preview orienation during layout failed
+//      so do it when the _captureSession is started. Only need the 1st event
+//      thus remove the event registration immediately after receiveing the 1st callback.
+- (void)captureSessionStarted:(NSNotification *)note
+{
+    [self updatePreviewOrientation: [self getUIInterfaceOrientation]];
+    
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    [nc removeObserver:self
+        name: AVCaptureSessionDidStartRunningNotification
+        object: _captureSession];
+    
 }
 
 -(void)loadView
@@ -35,20 +59,26 @@
     cameraView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     cameraView.backgroundColor = [UIColor blackColor];
     
+    self.view = cameraView;
+    
     [_mainController addChildViewController: self];
     [self didMoveToParentViewController: _mainController];
     
     //POSITION cameraview below the webview
     [_mainController.view insertSubview: cameraView belowSubview: _mainController.webView];
     
-    self.view = cameraView;
-    [self updatePreviewOrientation: [self getUIInterfaceOrientation]];
 }
 
+//do nothing atm
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear: animated];
+}
+
+//do nothing atm
 - (void)viewDidAppear:(BOOL)animated
 {
-    [super viewDidAppear: animated];
-    [self updatePreviewOrientation: [self getUIInterfaceOrientation]];
+    [super viewWillAppear: animated];
 }
 
 - (void)viewWillLayoutSubviews
@@ -63,33 +93,33 @@
     _mainController.webView.frame = webViewFrame;
 }
 
+//do nothing atm
 - (void)viewDidLayoutSubviews
 {
+    [super viewDidLayoutSubviews];
 }
 
+//called automatically during rotation
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
                         duration:(NSTimeInterval)duration {
 
-    //[super willAnimateRotationToInterfaceOrientation:<#toInterfaceOrientation#> duration:<#duration#>];
     [self updatePreviewOrientation: toInterfaceOrientation];
-    
 }
 
 -(void)updatePreviewOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    AVCaptureVideoOrientation orient = [self videoOrientationFromUIInterfaceOrientation: interfaceOrientation];
+    AVCaptureVideoOrientation videoOrient = [self videoOrientationFromUIInterfaceOrientation: interfaceOrientation];
     
     BOOL shouldRotate = [_mainController shouldAutorotateToInterfaceOrientation: interfaceOrientation];
    
-    if (shouldRotate) {
-        // set the orientation of preview layer
-        AVCaptureVideoOrientation orient = [self videoOrientationFromUIInterfaceOrientation: interfaceOrientation];
-        [_previewLayer.connection setVideoOrientation: orient];
+    if (shouldRotate && videoOrient != _previewLayer.connection.videoOrientation) {
+        _previewLayer.connection.videoOrientation = videoOrient;
     }
 }
 
 - (UIInterfaceOrientation)getUIInterfaceOrientation
 {
+    //return self.interfaceOrientation;
     return [UIApplication sharedApplication].statusBarOrientation;
 }
 
@@ -115,4 +145,5 @@
     
     return videoOrientation;
 }
+
 @end

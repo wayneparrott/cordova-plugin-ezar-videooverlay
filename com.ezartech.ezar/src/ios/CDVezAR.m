@@ -1,11 +1,10 @@
-// CDVezAR.m
-//
-// Copyright 2015, ezAR Technologies
-// All rights reserved.
-//
+/*
+ * CDVezAR.m
+ *
+ * Copyright 2015, ezAR Technologies, ezartech.com
+ * All rights reserved.
+ */
  
-#import "Cordova/CDV.h"
-#import <AVFoundation/AVFoundation.h>
 #import "CDVezAR.h"
 #import "CDVezARCameraViewController.h"
 
@@ -21,23 +20,15 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 }
 
 
-// INIT PLUGIN - Register for orientation changes
+// INIT PLUGIN - does nothing atm
 - (void) pluginInitialize
 {
     [super pluginInitialize];
     
-    //UIDevice *device = [UIDevice currentDevice];
-    //NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];//Get the notification centre for the app
-    //[nc addObserver:self											//Add ezar as an observer
-    //       selector:@selector(orientationChanged:)
-    //       name:UIDeviceOrientationDidChangeNotification
-    //       object:device];
 }
 
-
 // SETUP EZAR 
-// create video-preview under webview and 
-// make webview transparent
+// Create camera view and preview, make webview transparent.
 // return camera, light features and display details
 // 
 - (void)init:(CDVInvokedUrlCommand*)command
@@ -86,8 +77,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
-    
-    [self forceWebViewRedraw];
     
     //ACCESS DEVICE INFO: CAMERAS, ...
     NSDictionary* deviceInfoResult = [self basicGetDeviceInfo];
@@ -521,8 +510,16 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     return errorData;
 }
 
+//warning! total hack - setting transparency in web doc does not immediately take effect.
+//The hack is to toggle <body> display to none and then to block causes full repaint.
+//  
 - (void)forceWebViewRedraw 
 {
-	//[self.webview stringByEvaluatingJavaScriptFromString: jsstring];
+    NSString *jsstring =
+        @"document.body.style.display='none';"
+         "setTimeout(function(){document.body.style.display='block'},10);";
+    
+	[self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+
 }
 @end

@@ -1,12 +1,18 @@
-// CDVezAR.h
-//
-// Copyright 2015, ezAR Technologies
-// All rights reserved.
-//
+/**
+ * CDVezAR.h
+ *
+ * Copyright 2015, ezAR Technologies, ezartech.com
+ * All rights reserved.
+ * @author Wayne Parrott [wayne@ezartech.com]
+ */
 
 #import <AVFoundation/AVFoundation.h>
+
 #import "Cordova/CDV.h"
 
+/**
+ * Implements the ezAR Cordova api. 
+ */
 @interface CDVezAR : CDVPlugin
 
 - (void) init:(CDVInvokedUrlCommand*)command;

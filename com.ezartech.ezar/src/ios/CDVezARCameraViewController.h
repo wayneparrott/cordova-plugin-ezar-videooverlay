@@ -1,8 +1,8 @@
-// CDVezARCameraViewController.h
-//
-// Copyright 2015, ezAR Technologies
-// All rights reserved.
-//
+/*
+ * CDVezARCameraViewController.h
+ * Copyright 2015, ezAR Technologies, ezartech.com
+ * All rights reserved.
+ */
 
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
