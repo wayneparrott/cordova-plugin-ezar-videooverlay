@@ -20,11 +20,13 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 }
 
 
-// INIT PLUGIN - Register for orientation changes
+// INIT PLUGIN - does nothing atm
 - (void) pluginInitialize
 {
     [super pluginInitialize];
     
+<<<<<<< HEAD
+=======
     //todo: wayne - remove this code as it is handled in the controller
     //UIDevice *device = [UIDevice currentDevice];
     //NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];//Get the notification centre for the app
@@ -32,8 +34,8 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     //       selector:@selector(orientationChanged:)
     //       name:UIDeviceOrientationDidChangeNotification
     //       object:device];
+>>>>>>> branch 'master' of https://github.com/ezartech/com.ezartech.ezar.git
 }
-
 
 // SETUP EZAR 
 // Create camera view and preview, make webview transparent.
@@ -85,8 +87,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
-    
-    [self forceWebViewRedraw];
     
     //ACCESS DEVICE INFO: CAMERAS, ...
     NSDictionary* deviceInfoResult = [self basicGetDeviceInfo];
@@ -530,5 +530,9 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
          "setTimeout(function(){document.body.style.display='block'},10);";
     
 	[self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+<<<<<<< HEAD
+
+=======
+>>>>>>> branch 'master' of https://github.com/ezartech/com.ezartech.ezar.git
 }
 @end
