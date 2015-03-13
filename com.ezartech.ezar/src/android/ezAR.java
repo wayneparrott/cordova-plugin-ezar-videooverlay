@@ -166,7 +166,10 @@ public class ezAR extends CordovaPlugin {
         			jsonCamera.put("position", type.toString());
         			jsonCamera.put("zoom", parameters.getZoom());
         			jsonCamera.put("maxZoom", parameters.getMaxZoom());
-        			jsonCamera.put("light", false);
+        			
+        			Log.v(TAG, "HAS LIGHT:" + (parameters.getFlashMode() == null ? false : true));
+        			
+        			jsonCamera.put("light", parameters.getFlashMode() == null ? false : true);
         			jsonCamera.put("lightLevel", 0.);
         		        
         			jsonObject.put(type.toString(), jsonCamera);

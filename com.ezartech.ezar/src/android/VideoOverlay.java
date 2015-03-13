@@ -29,9 +29,10 @@ public class VideoOverlay extends ViewGroup {
         super(context);
 
         this.surfaceView = new SurfaceView(context);
-
+        
         this.surfaceHolder = surfaceView.getHolder();
-        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        this.surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        
         callback = new Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder surfaceHolder) {
@@ -226,11 +227,15 @@ public class VideoOverlay extends ViewGroup {
 	}
 
 	public void setLight(int intOrNull, CallbackContext callbackContext) {
+		// camera.stopPreview();
+		
 		Parameters parameters = camera.getParameters();
 		parameters.setFlashMode(intOrNull == 1 ? 
 				Parameters.FLASH_MODE_TORCH :
 				Parameters.FLASH_MODE_OFF);
 		camera.setParameters(parameters);
+		
+		// camera.startPreview();
 		
     	callbackContext.success();
 	}
