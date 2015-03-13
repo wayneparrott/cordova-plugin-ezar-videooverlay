@@ -2,15 +2,12 @@
  ezAR Cordova plugin manifest
  ezartech.com
 -->
-
-<?xml version="1.0" encoding="UTF-8"?>
-
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
       id="com.ezartech.ezar"
       version="0.1.0">
       
     <name>ezAR</name>
-    <description>AR foundation, overlay cordova webview on a live video preview with front & back camera control</description>
+    <description>AR foundation, overlay cordova webview on a live video preview with front and back camera control</description>
     <keywords>augmented reality,video preview,overlay,computer vision</keywords>
     <license>ezAR Free Use License, see http:ezartech.com/eula.html</license>
 
