@@ -1,6 +1,18 @@
+/**
+ *
+ * Copyright 2015, ezAR Technologies
+ * http://ezartech.com
+ *
+ * By @wayne_parrott, @vridosh, @kwparrott
+ *
+ * Licensed under a modified MIT license. 
+ * Please see LICENSE or http://ezartech.com/ezarstartupkit-license for more information
+ *
+ */
 package com.ezartech.ezar;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.cordova.CallbackContext;
 
@@ -112,6 +124,12 @@ public class VideoOverlay extends ViewGroup {
         }
 
         Camera.Parameters cameraParameters = camera.getParameters();
+
+        List<String> focusModes = cameraParameters.getSupportedFocusModes();
+        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+        	cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+        }
+        camera.setParameters(cameraParameters);
 
         if (currentSize == null) {
             setCameraParameters(camera, cameraParameters);

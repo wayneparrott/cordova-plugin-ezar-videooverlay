@@ -1,11 +1,11 @@
 /**
  * ezar.js
- * Copyright 2015, ezAR Technologies, ezartech.com
- * All rights reserved.
+ * Copyright 2015, ezAR Technologies
+ * Licensed under a modified MIT license, see LICENSE or http://ezartech.com/ezarstartupkit-license
  * 
  * @file Implements the ezar api for controlling device cameras, 
  *  zoom level and lighting. 
- * @author Wayne Parrott [wayne@ezartech.com]
+ * @author @wayne_parrott, @vridosh, @kwparrott
  * @version 0.1.0 
  */
 

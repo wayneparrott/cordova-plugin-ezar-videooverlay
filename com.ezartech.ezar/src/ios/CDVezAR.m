@@ -1,8 +1,14 @@
 /*
  * CDVezAR.m
  *
- * Copyright 2015, ezAR Technologies, ezartech.com
- * All rights reserved.
+ * Copyright 2015, ezAR Technologies
+ * http://ezartech.com
+ *
+ * By @wayne_parrott, @vridosh, @kwparrott
+ *
+ * Licensed under a modified MIT license. 
+ * Please see LICENSE or http://ezartech.com/ezarstartupkit-license for more information
+ *
  */
  
 #import "CDVezAR.h"
@@ -24,17 +30,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 - (void) pluginInitialize
 {
     [super pluginInitialize];
-    
-<<<<<<< HEAD
-=======
-    //todo: wayne - remove this code as it is handled in the controller
-    //UIDevice *device = [UIDevice currentDevice];
-    //NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];//Get the notification centre for the app
-    //[nc addObserver:self											//Add ezar as an observer
-    //       selector:@selector(orientationChanged:)
-    //       name:UIDeviceOrientationDidChangeNotification
-    //       object:device];
->>>>>>> branch 'master' of https://github.com/ezartech/com.ezartech.ezar.git
 }
 
 // SETUP EZAR 
@@ -530,9 +525,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
          "setTimeout(function(){document.body.style.display='block'},10);";
     
 	[self.webView stringByEvaluatingJavaScriptFromString: jsstring];
-<<<<<<< HEAD
-
-=======
->>>>>>> branch 'master' of https://github.com/ezartech/com.ezartech.ezar.git
 }
+
 @end
