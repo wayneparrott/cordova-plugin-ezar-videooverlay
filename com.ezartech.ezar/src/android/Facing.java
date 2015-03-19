@@ -12,19 +12,33 @@
 package com.ezartech.ezar;
 
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
 
 public enum Facing {
+	BACK {
+		public int getCameraInfoFacing() {
+			return Camera.CameraInfo.CAMERA_FACING_BACK;
+		}
+		
+		public boolean isFlipping() {
+			return false;
+		}
+	},
 	FRONT {
 		public int getCameraInfoFacing() {
 			return Camera.CameraInfo.CAMERA_FACING_FRONT;
 		}		
-	},
-	BACK {
-		public int getCameraInfoFacing() {
-			return Camera.CameraInfo.CAMERA_FACING_BACK;
+		
+		public boolean isFlipping() {
+			return true;
 		}
 	}
 	;
 
 	public abstract int getCameraInfoFacing();
+	public abstract boolean isFlipping();
+
+	public static Facing fromCameraInfo(CameraInfo info) {
+		return values()[info.facing];
+	}
 }

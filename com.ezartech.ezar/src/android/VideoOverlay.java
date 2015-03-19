@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.apache.cordova.CallbackContext;
 
+import android.app.Activity;
 import android.content.Context;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
@@ -28,7 +29,10 @@ import android.view.ViewGroup;
 
 public class VideoOverlay extends ViewGroup {
     private static final String TAG = "VideoOverlay";
+    
     private Camera camera = null;
+    private int cameraId = Integer.MIN_VALUE;
+    
     private Camera.Size currentSize;
     private boolean recording = false;
     private SurfaceView surfaceView;
@@ -37,7 +41,8 @@ public class VideoOverlay extends ViewGroup {
 	private Callback callback;
 
 
-    public VideoOverlay(Context context) {
+
+    public VideoOverlay(final Context context) {
         super(context);
 
         this.surfaceView = new SurfaceView(context);
@@ -45,22 +50,23 @@ public class VideoOverlay extends ViewGroup {
         this.surfaceHolder = surfaceView.getHolder();
         this.surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         
-        callback = new Callback() {
+        this.callback = new Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder surfaceHolder) {
                 Log.d(TAG, "surfaceCreated called");
-                previewAvailable();
+                onSurfaceCreated();
             }
 
             @Override
-            public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
+            public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int w, int h) {
             	Log.d(TAG, "surfaceChanged called");
-            	onSurfaceChanged();
+            	onSurfaceChanged(format, w, h);
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                 Log.d(TAG, "surfaceDestroyed called");
+                onSurfaceDestroyed();
             }
         };
 		surfaceHolder.addCallback(callback);
@@ -112,11 +118,13 @@ public class VideoOverlay extends ViewGroup {
             
             if (cameraInfo.facing == cameraFacing) {
                 camera = Camera.open(i);
+                cameraId = i;
             }
         }
 
         if (camera == null) {
         	camera = Camera.open(mNumberOfCameras - 1);
+        	cameraId = mNumberOfCameras - 1;
         }
 
         if (camera == null) {
@@ -129,6 +137,7 @@ public class VideoOverlay extends ViewGroup {
         if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
         	cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
+
         camera.setParameters(cameraParameters);
 
         if (currentSize == null) {
@@ -143,6 +152,8 @@ public class VideoOverlay extends ViewGroup {
             Log.e(TAG, "Unable to attach preview to camera!", e);
         }
 
+        doUpdateDisplayOrientation();
+        
         camera.startPreview();
         recording = true;
     }
@@ -159,7 +170,9 @@ public class VideoOverlay extends ViewGroup {
         recording = false;
     }
 
-    void previewAvailable() {
+    void onSurfaceCreated() {
+    	Log.d(TAG, "onSurfaceCreated");
+
         if (paused) {
         	Log.d(TAG, "onResume called !!!");
         	try {
@@ -168,6 +181,7 @@ public class VideoOverlay extends ViewGroup {
     			Log.d(TAG, "PROBLEM", e);
     		}
 
+        	doUpdateDisplayOrientation();
         	camera.startPreview();
         	recording = true;
         	paused = false;
@@ -175,8 +189,18 @@ public class VideoOverlay extends ViewGroup {
 
     }
     
-    void onSurfaceChanged() {
-    	Log.d(TAG, "onSurfaceChanged");
+	private static final int[] ROTATIONS = {
+			android.view.Surface.ROTATION_0,
+			android.view.Surface.ROTATION_90,
+			android.view.Surface.ROTATION_180,
+			android.view.Surface.ROTATION_270
+	};
+
+    void onSurfaceChanged(int format, int w, int h) {
+    	if (camera != null) {
+	    	doUpdateDisplayOrientation();
+	    	return;
+    	}    	
 
        	// Now let's start camera again if needed
 //        if (paused) {
@@ -184,6 +208,37 @@ public class VideoOverlay extends ViewGroup {
 //        	camera.startPreview();
 //        	paused = false;
 //        }    	
+    }
+
+	private void doUpdateDisplayOrientation() {
+		Activity context = (Activity) getContext();
+		int ori = context.getWindowManager().getDefaultDisplay().getRotation();
+		for (int i = 0; i < ROTATIONS.length; i++) {
+			if (ROTATIONS[i] == ori) {
+				Camera.CameraInfo info = new Camera.CameraInfo();  
+				Camera.getCameraInfo(cameraId, info);
+
+				int degrees = i*90;
+				Facing facing = Facing.fromCameraInfo(info);
+				Log.d(TAG, "onSurfaceChanged " + 
+						facing + " " + 
+						"ORI:" + degrees + " " + ori + " " + 
+						"ORIENT:" + info.orientation);
+
+				if (facing.isFlipping()) {
+					camera.setDisplayOrientation((360 + 360 - degrees - info.orientation) % 360);
+				} else {
+					camera.setDisplayOrientation((360 + info.orientation -degrees) % 360);
+				}
+				
+
+				break;
+			}
+		}
+	}
+    
+    void onSurfaceDestroyed() {
+    	Log.d(TAG, "onSurfaceDestroyed");
     }
 
     private void setCameraParameters(Camera camera, Camera.Parameters parameters){
@@ -198,18 +253,12 @@ public class VideoOverlay extends ViewGroup {
         // parameters.setRotation(0);
 
         camera.setParameters(parameters);
-        // camera.setDisplayOrientation(0);
+        
+        Log.d(TAG, "setCameraParameters:" + currentSize);
     }
 
     public void onResume() {
     	Log.d(TAG, "onResume called");
-/*
-    	Handler mainHandler = new Handler(getContext().getMainLooper());
-    	mainHandler.postDelayed(new Runnable() {
-    		public void run() {    	    	        
-    		}
-    	}, 200);
-*/
     }
 
     public void onPause() {    	
@@ -218,8 +267,6 @@ public class VideoOverlay extends ViewGroup {
         try {
         	camera.stopPreview();
 			camera.setPreviewDisplay(null);
-			// camera.release();
-			// camera = null;
 		} catch (IOException e) {
 			Log.d(TAG, "PROBLEM", e);
 		}
@@ -237,24 +284,27 @@ public class VideoOverlay extends ViewGroup {
     }
 
 	public void setZoom(int doubleOrNull, CallbackContext callbackContext) {
+		try {
 		Parameters parameters = camera.getParameters();
 		parameters.setZoom(doubleOrNull);
 		camera.setParameters(parameters);
 		
 		callbackContext.success();
+		} catch (Throwable e) {
+			callbackContext.error(e.getMessage());
+		}
 	}
 
 	public void setLight(int intOrNull, CallbackContext callbackContext) {
-		// camera.stopPreview();
-		
+		try {
 		Parameters parameters = camera.getParameters();
 		parameters.setFlashMode(intOrNull == 1 ? 
 				Parameters.FLASH_MODE_TORCH :
 				Parameters.FLASH_MODE_OFF);
 		camera.setParameters(parameters);
-		
-		// camera.startPreview();
-		
     	callbackContext.success();
+		} catch (Throwable e) {
+			callbackContext.error(e.getMessage());
+		}
 	}
 }
