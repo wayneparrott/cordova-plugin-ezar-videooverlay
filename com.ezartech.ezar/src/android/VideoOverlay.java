@@ -13,7 +13,6 @@ package com.ezartech.ezar;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.apache.cordova.CallbackContext;
 
 import android.app.Activity;
@@ -39,8 +38,6 @@ public class VideoOverlay extends ViewGroup {
     private SurfaceHolder surfaceHolder;
     private boolean paused = false;
 	private Callback callback;
-
-
 
     public VideoOverlay(final Context context) {
         super(context);
@@ -69,6 +66,8 @@ public class VideoOverlay extends ViewGroup {
                 onSurfaceDestroyed();
             }
         };
+        
+        Log.d(TAG, "surfaceHolder.addCallback");
 		surfaceHolder.addCallback(callback);
         
         addView(surfaceView);
@@ -91,16 +90,24 @@ public class VideoOverlay extends ViewGroup {
         return recording;
     }
 
-    public void startRecording(Facing facing, double zoom, double light) {
-    	Log.d(TAG, "startRecording called " + facing + " " + zoom + " " + light);
+	public void startRecording(final Facing facing, final double zoom, final double light, final Runnable onDone) {
+    	Log.d(TAG, "startRecording called " + facing + 
+    			" " + zoom + 
+    			" " + light + 
+    			" " + "isShown " + surfaceView.isShown() + 
+    			" " + surfaceView.getWidth() + ", " + surfaceView.getHeight());
+    	
+    	Log.v(TAG, "H1");
     	
         if (isRecording()) {
             try {
 				stopRecording();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.e(TAG, "FAiled to stop recoring", e);
 			}
         }
+        
+        Log.v(TAG, "H2");
 
         final int cameraFacing = facing.getCameraInfoFacing();
         
@@ -143,28 +150,41 @@ public class VideoOverlay extends ViewGroup {
         if (currentSize == null) {
             setCameraParameters(camera, cameraParameters);
         }
-
-        try {
-        	Log.v(TAG, "camera.setPreviewDisplay");
-            camera.setPreviewDisplay(surfaceHolder);
-            Log.v(TAG, "camera.setPreviewDisplay DONE");
-        } catch (IOException e) {
-            Log.e(TAG, "Unable to attach preview to camera!", e);
-        }
-
-        doUpdateDisplayOrientation();
         
-        camera.startPreview();
-        recording = true;
+        doUpdateDisplayOrientation();
+
+        	Log.v(TAG, "camera.setPreviewDisplay1");
+        	
+        	surfaceHolder.addCallback(callback);
+        	
+        	post(new Runnable() {
+				@Override
+				public void run() {
+			        try {
+			        	Log.v(TAG, "camera.setPreviewDisplay2 " + surfaceHolder.getSurface().isValid());
+			            camera.setPreviewDisplay(surfaceHolder);
+			            Log.v(TAG, "camera.setPreviewDisplay DONE");
+			        } catch (IOException e) {
+			            Log.e(TAG, "Unable to attach preview to camera!", e);
+			        }
+
+			        camera.startPreview();
+			        recording = true;
+
+			        onDone.run();
+				}
+        	});        
     }
 
     public void stopRecording() throws IOException {
         Log.d(TAG, "stopRecording called");
 
-        camera.setPreviewDisplay(null);
-        
-        camera.stopPreview();
-        camera.release();
+        if (camera != null) {
+	        camera.setPreviewDisplay(null);
+	        
+	        camera.stopPreview();
+	        camera.release();
+        }
         camera = null;
 
         recording = false;

@@ -20,11 +20,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 
@@ -35,11 +41,13 @@ public class ezAR extends CordovaPlugin {
 	private static final String TAG = "ezAR";
 	
     private VideoOverlay videoOverlay;
+    private SurfaceView stoppedCameraView;
+	private View activeView = null;
 	
     @Override
     public void initialize(final CordovaInterface cordova, final CordovaWebView webView) {
     	super.initialize(cordova, webView);
-
+    	
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {           	
@@ -48,27 +56,75 @@ public class ezAR extends CordovaPlugin {
                 // webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
                 videoOverlay = new VideoOverlay(cordova.getActivity());
+                stoppedCameraView = new SurfaceView(cordova.getActivity());
 
-                try {                	               	
-                	// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
-                	ViewGroup vg = (ViewGroup) webView.getParent();
-                	vg.removeView(webView);
+                stoppedCameraView.getHolder().addCallback(new Callback() {
+					@Override
+					public void surfaceCreated(SurfaceHolder holder) {
+		                Rect surfaceFrame = holder.getSurfaceFrame();
+		                Canvas lockCanvas = holder.lockCanvas(surfaceFrame);
+		                lockCanvas.drawRGB(0, 0, 0);
+		                holder.unlockCanvasAndPost(lockCanvas);
+					}
 
-                    cordova.getActivity().setContentView(videoOverlay, 
-                    		new ViewGroup.LayoutParams(
-                    				LayoutParams.MATCH_PARENT, 
-                    				LayoutParams.MATCH_PARENT));
+					@Override
+					public void surfaceChanged(SurfaceHolder holder,
+							int format, int width, int height) {
+					}
 
-                    cordova.getActivity().addContentView(webView, 
-                    		new ViewGroup.LayoutParams(
-                    				LayoutParams.WRAP_CONTENT, 
-                    				LayoutParams.WRAP_CONTENT));
-                } catch(Exception e) {
-                    Log.e(TAG, "Error during preview create", e);
-                    // callbackContext.error(TAG + ": " + e.getMessage());
-                }
+					@Override
+					public void surfaceDestroyed(SurfaceHolder holder) {
+					}                	
+                });
+                stoppedCameraView.setWillNotDraw(false);
                 
+    			// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
+    			ViewGroup vg = (ViewGroup) webView.getParent();
+    			vg.removeView(webView);
+
+    			cordova.getActivity().setContentView(stoppedCameraView, 
+    					new ViewGroup.LayoutParams(
+    							LayoutParams.MATCH_PARENT,
+    							LayoutParams.MATCH_PARENT));
+
+    			cordova.getActivity().addContentView(videoOverlay, 
+    					new ViewGroup.LayoutParams(
+    							LayoutParams.MATCH_PARENT,
+    							LayoutParams.MATCH_PARENT));
+
+    			cordova.getActivity().addContentView(webView, 
+    					new ViewGroup.LayoutParams(
+    							LayoutParams.WRAP_CONTENT, 
+    							LayoutParams.WRAP_CONTENT));
+
+    			videoOverlay.setVisibility(View.INVISIBLE);
+    			stoppedCameraView.setVisibility(View.VISIBLE);
+    			
+    			activeView = stoppedCameraView;
             }
+        });
+    }
+    
+	private void makeViewActive(final View view, final Runnable andThen) {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {           	
+			    try {
+		    		if (activeView != null) {
+						activeView.setVisibility(View.INVISIBLE);
+					}
+
+					view.setVisibility(View.VISIBLE);
+
+					activeView = view;
+
+			    	andThen.run();
+			    } catch(Exception e) {
+			        Log.e(TAG, "Error during preview create", e);
+			        // callbackContext.error(TAG + ": " + e.getMessage());
+			    }
+            }
+
         });
     }
 
@@ -80,30 +136,75 @@ public class ezAR extends CordovaPlugin {
             this.init(callbackContext);
             return true;
         } else if (action.equals("startCamera")) {
-        	Log.v(TAG, action + " " + args);
-        	
         	this.startCamera(
-        			args.getString(0), 
-        			getDoubleOrNull(args, 1), 
+        			args.getString(0),
+        			getDoubleOrNull(args, 1),
         			getDoubleOrNull(args, 2),
         			callbackContext);
 
         	return true;
         } else if (action.equals("stopCamera")) {
-        	try {
-				videoOverlay.stopRecording();
-				
-				callbackContext.success();
-			} catch (IOException e) {
-				callbackContext.error("PROBLEM " + e.getMessage());
-			}
+        	this.stopCamera(callbackContext);
+
+        	return true;
         } else if (action.equals("setZoom")) {
-        	videoOverlay.setZoom(getIntOrNull(args, 0), callbackContext);
+        	this.setZoom(getIntOrNull(args, 0), callbackContext);
+
+        	return true;
         } else if (action.equals("setLight")) {
-        	videoOverlay.setLight(getIntOrNull(args, 0), callbackContext);
+        	this.setLight(getIntOrNull(args, 0), callbackContext);
+
+        	return true;
         }
+
         return false;
     }
+
+    private void startCamera(final String type, 
+    		final double zoom, 
+    		final double light, 
+    		final CallbackContext callbackContext) {
+				videoOverlay.startRecording(Facing.valueOf(type), zoom, light, new Runnable() {
+					@Override
+					public void run() {
+						makeViewActive(videoOverlay, new Runnable() {
+							@Override
+							public void run() {
+					
+						    	Log.v(TAG, "startRecording DONE");
+		
+						    	if (callbackContext != null) {
+						    		callbackContext.success();
+						    	}
+							}
+				});
+			}
+    	});
+    }
+    
+	private void stopCamera(final CallbackContext callbackContext) {
+
+		makeViewActive(stoppedCameraView, new Runnable() {
+			@Override
+			public void run() {
+				try {
+					videoOverlay.stopRecording();
+					callbackContext.success();
+				} catch (IOException e) {
+					callbackContext.error("PROBLEM " + e.getMessage());
+				}
+			}
+        });
+			
+	}
+
+	private void setLight(final int lightValue, final CallbackContext callbackContext) {
+		videoOverlay.setLight(lightValue, callbackContext);
+	}
+
+	private void setZoom(final int zoomValue, final CallbackContext callbackContext) {
+		videoOverlay.setZoom(zoomValue, callbackContext);
+	}
 
     private static int getIntOrNull(JSONArray args, int i) {
 		if (args.isNull(i)) {
@@ -192,23 +293,13 @@ public class ezAR extends CordovaPlugin {
 		callbackContext.success(jsonObject);
     }
     
-    private void startCamera(String type, double zoom, double light, CallbackContext callbackContext) {
-    	videoOverlay.startRecording(Facing.valueOf(type), zoom, light);
-
-    	Log.v(TAG, "startRecording DONE");
-    	
-    	if (callbackContext != null) {
-    		callbackContext.success();
-    	}
-    }
-    
     @Override
     public void onPause(boolean multitasking) {
     	super.onPause(multitasking);
 
     	Log.v(TAG, "onPause");
     	videoOverlay.onPause();
-    	Log.v(TAG, "onPause DONE");
+    	Log.v(TAG, "onPause DONE");    	
     }
 
     @Override
