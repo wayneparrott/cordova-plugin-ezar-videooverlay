@@ -40,31 +40,31 @@ import android.view.ViewGroup.LayoutParams;
 public class ezAR extends CordovaPlugin {
 	private static final String TAG = "ezAR";
 	
-    private VideoOverlay videoOverlay;
-    private SurfaceView stoppedCameraView;
+	private VideoOverlay videoOverlay;
+	private SurfaceView stoppedCameraView;
 	private View activeView = null;
 	
-    @Override
-    public void initialize(final CordovaInterface cordova, final CordovaWebView webView) {
-    	super.initialize(cordova, webView);
-    	
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {           	
-                webView.setKeepScreenOn(true);
-                webView.setBackgroundColor(0x00000000); // transparent RGB
-                // webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+	@Override
+	public void initialize(final CordovaInterface cordova, final CordovaWebView webView) {
+		super.initialize(cordova, webView);
+		
+		cordova.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {		   	
+				webView.setKeepScreenOn(true);
+				webView.setBackgroundColor(0x00000000); // transparent RGB
+				// webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
-                videoOverlay = new VideoOverlay(cordova.getActivity());
-                stoppedCameraView = new SurfaceView(cordova.getActivity());
+				videoOverlay = new VideoOverlay(cordova.getActivity());
+				stoppedCameraView = new SurfaceView(cordova.getActivity());
 
-                stoppedCameraView.getHolder().addCallback(new Callback() {
+				stoppedCameraView.getHolder().addCallback(new Callback() {
 					@Override
 					public void surfaceCreated(SurfaceHolder holder) {
-		                Rect surfaceFrame = holder.getSurfaceFrame();
-		                Canvas lockCanvas = holder.lockCanvas(surfaceFrame);
-		                lockCanvas.drawRGB(0, 0, 0);
-		                holder.unlockCanvasAndPost(lockCanvas);
+						Rect surfaceFrame = holder.getSurfaceFrame();
+						Canvas lockCanvas = holder.lockCanvas(surfaceFrame);
+						lockCanvas.drawRGB(0, 0, 0);
+						holder.unlockCanvasAndPost(lockCanvas);
 					}
 
 					@Override
@@ -74,116 +74,116 @@ public class ezAR extends CordovaPlugin {
 
 					@Override
 					public void surfaceDestroyed(SurfaceHolder holder) {
-					}                	
-                });
-                stoppedCameraView.setWillNotDraw(false);
-                
-    			// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
-    			ViewGroup vg = (ViewGroup) webView.getParent();
-    			vg.removeView(webView);
+					}					
+				});
+				stoppedCameraView.setWillNotDraw(false);
+				
+				// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
+				ViewGroup vg = (ViewGroup) webView.getParent();
+				vg.removeView(webView);
 
-    			cordova.getActivity().setContentView(stoppedCameraView, 
-    					new ViewGroup.LayoutParams(
-    							LayoutParams.MATCH_PARENT,
-    							LayoutParams.MATCH_PARENT));
+				cordova.getActivity().setContentView(stoppedCameraView, 
+						new ViewGroup.LayoutParams(
+								LayoutParams.MATCH_PARENT,
+								LayoutParams.MATCH_PARENT));
 
-    			cordova.getActivity().addContentView(videoOverlay, 
-    					new ViewGroup.LayoutParams(
-    							LayoutParams.MATCH_PARENT,
-    							LayoutParams.MATCH_PARENT));
+				cordova.getActivity().addContentView(videoOverlay, 
+						new ViewGroup.LayoutParams(
+								LayoutParams.MATCH_PARENT,
+								LayoutParams.MATCH_PARENT));
 
-    			cordova.getActivity().addContentView(webView, 
-    					new ViewGroup.LayoutParams(
-    							LayoutParams.WRAP_CONTENT, 
-    							LayoutParams.WRAP_CONTENT));
+				cordova.getActivity().addContentView(webView, 
+						new ViewGroup.LayoutParams(
+								LayoutParams.MATCH_PARENT, 
+								LayoutParams.MATCH_PARENT));
 
-    			videoOverlay.setVisibility(View.INVISIBLE);
-    			stoppedCameraView.setVisibility(View.VISIBLE);
-    			
-    			activeView = stoppedCameraView;
-            }
-        });
-    }
-    
+				videoOverlay.setVisibility(View.INVISIBLE);
+				stoppedCameraView.setVisibility(View.VISIBLE);
+				
+				activeView = stoppedCameraView;
+			}
+		});
+	}
+	
 	private void makeViewActive(final View view, final Runnable andThen) {
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {           	
-			    try {
-		    		if (activeView != null) {
+		cordova.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {		   	
+				try {
+					if (activeView != null) {
 						activeView.setVisibility(View.INVISIBLE);
+						activeView.invalidate();
 					}
 
 					view.setVisibility(View.VISIBLE);
+					
+					view.invalidate();
 
 					activeView = view;
 
-			    	andThen.run();
-			    } catch(Exception e) {
-			        Log.e(TAG, "Error during preview create", e);
-			        // callbackContext.error(TAG + ": " + e.getMessage());
-			    }
-            }
+					andThen.run();
+				} catch(Exception e) {
+					Log.e(TAG, "Error during preview create", e);
+					// callbackContext.error(TAG + ": " + e.getMessage());
+				}
+			}
 
-        });
-    }
+		});
+	}
 
-    @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-    	Log.v(TAG, action + " " + args.length());
-    	
-        if (action.equals("init")) {            
-            this.init(callbackContext);
-            return true;
-        } else if (action.equals("startCamera")) {
-        	this.startCamera(
-        			args.getString(0),
-        			getDoubleOrNull(args, 1),
-        			getDoubleOrNull(args, 2),
-        			callbackContext);
+	@Override
+	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+		Log.v(TAG, action + " " + args.length());
+		
+		if (action.equals("init")) {			
+			this.init(callbackContext);
+			return true;
+		} else if (action.equals("startCamera")) {
+			this.startCamera(
+					args.getString(0),
+					getDoubleOrNull(args, 1),
+					getDoubleOrNull(args, 2),
+					callbackContext);
 
-        	return true;
-        } else if (action.equals("stopCamera")) {
-        	this.stopCamera(callbackContext);
+			return true;
+		} else if (action.equals("stopCamera")) {
+			this.stopCamera(callbackContext);
 
-        	return true;
-        } else if (action.equals("setZoom")) {
-        	this.setZoom(getIntOrNull(args, 0), callbackContext);
+			return true;
+		} else if (action.equals("setZoom")) {
+			this.setZoom(getIntOrNull(args, 0), callbackContext);
 
-        	return true;
-        } else if (action.equals("setLight")) {
-        	this.setLight(getIntOrNull(args, 0), callbackContext);
+			return true;
+		} else if (action.equals("setLight")) {
+			this.setLight(getIntOrNull(args, 0), callbackContext);
 
-        	return true;
-        }
+			return true;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
-    private void startCamera(final String type, 
-    		final double zoom, 
-    		final double light, 
-    		final CallbackContext callbackContext) {
+	private void startCamera(final String type, 
+			final double zoom, 
+			final double light, 
+			final CallbackContext callbackContext) {
 				videoOverlay.startRecording(Facing.valueOf(type), zoom, light, new Runnable() {
 					@Override
 					public void run() {
 						makeViewActive(videoOverlay, new Runnable() {
 							@Override
 							public void run() {
-					
-						    	Log.v(TAG, "startRecording DONE");
-		
-						    	if (callbackContext != null) {
-						    		callbackContext.success();
-						    	}
+								Log.v(TAG, "startRecording DONE");
+								if (callbackContext != null) {
+									callbackContext.success();
+								}
 							}
 				});
 			}
-    	});
-    }
-    
+		});
+	}
+	
 	private void stopCamera(final CallbackContext callbackContext) {
-
 		makeViewActive(stoppedCameraView, new Runnable() {
 			@Override
 			public void run() {
@@ -194,8 +194,7 @@ public class ezAR extends CordovaPlugin {
 					callbackContext.error("PROBLEM " + e.getMessage());
 				}
 			}
-        });
-			
+		});
 	}
 
 	private void setLight(final int lightValue, final CallbackContext callbackContext) {
@@ -206,7 +205,7 @@ public class ezAR extends CordovaPlugin {
 		videoOverlay.setZoom(zoomValue, callbackContext);
 	}
 
-    private static int getIntOrNull(JSONArray args, int i) {
+	private static int getIntOrNull(JSONArray args, int i) {
 		if (args.isNull(i)) {
 			return Integer.MIN_VALUE;
 		}
@@ -219,7 +218,7 @@ public class ezAR extends CordovaPlugin {
 		}
 	}
 
-    private static double getDoubleOrNull(JSONArray args, int i) {
+	private static double getDoubleOrNull(JSONArray args, int i) {
 		if (args.isNull(i)) {
 			return Double.NaN;
 		}
@@ -233,90 +232,90 @@ public class ezAR extends CordovaPlugin {
 	}
 
 	private void init(final CallbackContext callbackContext) {
-        JSONObject jsonObject = new JSONObject();
-        try {
-        	Display display = cordova.getActivity().getWindowManager().getDefaultDisplay();
-        	DisplayMetrics m = new DisplayMetrics(); 
-        	display.getMetrics(m);
-        	
+		JSONObject jsonObject = new JSONObject();
+		try {
+			Display display = cordova.getActivity().getWindowManager().getDefaultDisplay();
+			DisplayMetrics m = new DisplayMetrics(); 
+			display.getMetrics(m);
+			
 			jsonObject.put("displayWidth", m.widthPixels);
 			jsonObject.put("displayHeight", m.heightPixels);
 			
-            int mNumberOfCameras = Camera.getNumberOfCameras();
-            
-            Log.v(TAG, "Cameras:" + mNumberOfCameras);
-            
-            // Find the ID of the back-facing ("default") camera
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            for (int i = 0; i < mNumberOfCameras; i++) {
-                Camera.getCameraInfo(i, cameraInfo);
+			int mNumberOfCameras = Camera.getNumberOfCameras();
+			
+			Log.v(TAG, "Cameras:" + mNumberOfCameras);
+			
+			// Find the ID of the back-facing ("default") camera
+			Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+			for (int i = 0; i < mNumberOfCameras; i++) {
+				Camera.getCameraInfo(i, cameraInfo);
 
-                Parameters parameters;
-                Camera open = null;
-                try {
+				Parameters parameters;
+				Camera open = null;
+				try {
 					open = Camera.open(i);
 					parameters = open.getParameters();
-                } finally {
-                	if (open != null) {
-                		open.release();
-                	}
-                }
-                
-                Log.v(TAG, "Camera facing:" + cameraInfo.facing);
-                
-                Facing type = null;
-                for (Facing f : Facing.values()) {
-                	if (f.getCameraInfoFacing() == cameraInfo.facing) {
-                		type = f;
-                	}
-                }
+				} finally {
+					if (open != null) {
+						open.release();
+					}
+				}
+				
+				Log.v(TAG, "Camera facing:" + cameraInfo.facing);
+				
+				Facing type = null;
+				for (Facing f : Facing.values()) {
+					if (f.getCameraInfoFacing() == cameraInfo.facing) {
+						type = f;
+					}
+				}
 
-                if (type != null) {
-        			JSONObject jsonCamera = new JSONObject();
-        			jsonCamera.put("id", i);
-        			jsonCamera.put("position", type.toString());
-        			jsonCamera.put("zoom", parameters.getZoom());
-        			jsonCamera.put("maxZoom", parameters.getMaxZoom());
-        			
-        			Log.v(TAG, "HAS LIGHT:" + (parameters.getFlashMode() == null ? false : true));
-        			
-        			jsonCamera.put("light", parameters.getFlashMode() == null ? false : true);
-        			jsonCamera.put("lightLevel", 0.);
-        		        
-        			jsonObject.put(type.toString(), jsonCamera);
-                }
-            }
+				if (type != null) {
+					JSONObject jsonCamera = new JSONObject();
+					jsonCamera.put("id", i);
+					jsonCamera.put("position", type.toString());
+					jsonCamera.put("zoom", parameters.getZoom());
+					jsonCamera.put("maxZoom", parameters.getMaxZoom());
+					
+					Log.v(TAG, "HAS LIGHT:" + (parameters.getFlashMode() == null ? false : true));
+					
+					jsonCamera.put("light", parameters.getFlashMode() == null ? false : true);
+					jsonCamera.put("lightLevel", 0.);
+						
+					jsonObject.put(type.toString(), jsonCamera);
+				}
+			}
 		} catch (JSONException e) {
 			Log.e(TAG, "Can't set exception", e);
 		}
 
 		callbackContext.success(jsonObject);
-    }
-    
-    @Override
-    public void onPause(boolean multitasking) {
-    	super.onPause(multitasking);
+	}
+	
+	@Override
+	public void onPause(boolean multitasking) {
+		super.onPause(multitasking);
 
-    	Log.v(TAG, "onPause");
-    	videoOverlay.onPause();
-    	Log.v(TAG, "onPause DONE");    	
-    }
+		Log.v(TAG, "onPause");
+		videoOverlay.onPause();
+		Log.v(TAG, "onPause DONE");		
+	}
 
-    @Override
-    public void onResume(boolean multitasking) {
-    	super.onResume(multitasking);
-    	
-    	Log.v(TAG, "onResume");
-    	videoOverlay.onResume();
-    	Log.v(TAG, "onResume DONE");
-    }
+	@Override
+	public void onResume(boolean multitasking) {
+		super.onResume(multitasking);
+		
+		Log.v(TAG, "onResume");
+		videoOverlay.onResume();
+		Log.v(TAG, "onResume DONE");
+	}
 
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
 
-    	Log.v(TAG, "onDestroy");
-    	videoOverlay.onDestroy();
-    	Log.v(TAG, "onDestroy DONE");
-    }
+		Log.v(TAG, "onDestroy");
+		videoOverlay.onDestroy();
+		Log.v(TAG, "onDestroy DONE");
+	}
 }
