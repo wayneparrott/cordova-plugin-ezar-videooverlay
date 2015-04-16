@@ -1,0 +1,62 @@
+<!--
+ ezAR Cordova plugin manifest
+ ezartech.com
+-->
+<plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
+      id="com.ezartech.ezar"
+      version="0.1.0">
+      
+    <name>ezAR Startup Kit</name>
+    <description>Augmented reality SDK for Cordova hybrid-mobile applications. 
+                 Overlay a real-world background mobile device camera with
+                 a transparent application web (HTML) UI that has full access
+                 to all Cordova plugin apis.  
+    </description>
+    <keywords>augmented reality,video preview,overlay,computer vision</keywords>
+    <license>modified MIT License, see http://ezartech.com/ezarstartupkit-license</license>
+
+	<!-- web api -->
+    <js-module src="www/ezar.js" name="ezar">
+        <clobbers target="ezar" />
+    </js-module>
+    
+    <js-module src="www/camera.js" name="camera">
+        <clobbers target="camera" />
+    </js-module>
+    
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="ezAR">
+                <param name="ios-package" value="CDVezAR"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/CDVezAR.h" />
+        <header-file src="src/ios/CDVezARCameraViewController.h" /> 
+        <source-file src="src/ios/CDVezAR.m" />
+        <source-file src="src/ios/CDVezARCameraViewController.m" />
+        
+        <framework src="UIKit.framework" />
+    	<framework src="Foundation.framework" />
+    	<framework src="AVFoundation.framework" />
+    </platform>
+
+	<!-- android -->
+	<platform name="android">
+      <config-file parent="/*" target="res/xml/config.xml">
+         <feature name="ezAR">
+            <param name="android-package" value="com.ezartech.ezar.ezAR" />
+         </feature>
+      </config-file>
+      <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-feature android:name="android.hardware.camera" />
+            <uses-feature android:name="android.hardware.camera.autofocus" />
+      </config-file>
+      <config-file parent="/*" target="AndroidManifest.xml" />
+      <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar" />
+      <source-file src="src/android/VideoOverlay.java" target-dir="src/com/ezartech/ezar" />
+      <source-file src="src/android/Facing.java" target-dir="src/com/ezartech/ezar" />
+   </platform>
+   
+</plugin>
