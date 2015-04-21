@@ -139,8 +139,6 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 	 */
 	this.setZoom = function(zoom, successCB, errorCB) {
 		_zoom = zoom;
-    
-        console.log("zooming camera: " + _zoom);
 
         if (_self.isActive() && _self.isRunning()) {
             exec(function() {console.log('success');},
@@ -192,7 +190,6 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
                 }
              },
              function(error) {
-                console.log('error: ' + error); 
                 if (errorCallback) {
                     errorCallback(error);
                 }
@@ -218,18 +215,6 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
         return !_self.isRunning();
     };
     
-    
-    /* does not yet work on ios
-     this.screenshot = function(successCB, errorCB) {
-		if (!_self.isActive()) return;
-		
-        exec(function() {console.log('success');},
-             function(error) {console.log('error: ' + error); },
-             "ezAR",
-             "screenshot",
-             []); 
-	};
-	*/
 }
 
 function isFunction(f) {

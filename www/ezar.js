@@ -44,7 +44,7 @@ module.exports = (function() {
         }
         
         var onInit = function(deviceData) {
-            console.log(deviceData);
+            //console.log(deviceData);
             _ezAR.displaySize =
                 { width: deviceData.displayWidth,
                   height: deviceData.displayHeight
@@ -163,23 +163,23 @@ module.exports = (function() {
         var lightLevel = hasLight ? cameraData.lightLevel : 0;
         var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom,hasLight,lightLevel);
                   
-                  console.log("camera: " + camera);
-                  console.log(camera);
+                  //console.log("camera: " + camera);
+                  //console.log(camera);
                   
         return camera;
     }
                   
     function initCameras(deviceData) {
         CAMS = deviceData;
-        console.log(deviceData);
+        //console.log(deviceData);
                   
         if ('FRONT' in deviceData) {
             _frontCamera = initCamera(deviceData.FRONT);
-            console.log('front'); console.log(_frontCamera);
+            //console.log('front'); console.log(_frontCamera);
         }
         if ('BACK' in deviceData) {
             _backCamera = initCamera(deviceData.BACK);
-            console.log('back'); console.log(_backCamera);
+            //console.log('back'); console.log(_backCamera);
         }
     }
     
