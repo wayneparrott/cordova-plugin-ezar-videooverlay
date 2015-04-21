@@ -6,10 +6,21 @@ Develop augmented reality applications using the ezAR Startup Kit. When initiali
 - Android 4.2 and greater 
 
 ##Getting Started
-Add the ezAR plugin to your Corodva project
+Add the ezAR plugin to your Corodva project the Cordova CLI
 
-    cordova plugin add pathtoezar/com.ezartech.ezar
+        cordova plugin add pathtoezar/com.ezartech.ezar
 
+Next in your Cordova JavaScript deviceready handler include the following JavaScript snippet to initialize ezAR and activate the camera on the back of the device.
+
+        ezar.initialize(
+            function() {
+                ezar.getBackCamera().start();
+                },
+            function(err) {
+                alert('unable to init ezar: ' + err);
+        });
+                    
+##Additional Documentation        
 See [ezartech.com](http://ezartech.com) for documentation and support.
 
 ##License
