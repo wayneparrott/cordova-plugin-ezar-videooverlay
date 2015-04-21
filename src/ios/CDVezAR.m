@@ -266,53 +266,6 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 }
 
 
-//
-//
-//
-- (void) screenshot:(CDVInvokedUrlCommand*)command
-{
-    UIWindow *topWindow = [[[UIApplication sharedApplication].windows sortedArrayUsingComparator:^NSComparisonResult(UIWindow *win1, UIWindow *win2) {
-        return win1.windowLevel - win2.windowLevel;
-    }] lastObject];
-    
-    UIView *view = [[topWindow subviews] lastObject];
-    //UIView *view = self.webView;
-    UIGraphicsBeginImageContextWithOptions(view.bounds.size, NO, 0.0);
-    [view drawViewHierarchyInRect: view.bounds afterScreenUpdates: YES];
-    UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    UIImageWriteToSavedPhotosAlbum(screenshot, self, @selector(imageSavedToPhotosAlbum: didFinishSavingWithError: contextInfo:), nil);
-    
-//    UIImageWriteToSavedPhotosAlbum ( UIImage *image, id completionTarget, SEL completionSelector, void *contextInfo );
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-
-//
-// Does not work :(
-//
-- (void)imageSavedToPhotosAlbum:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo {
-    NSString *message;
-    NSString *title;
-    if (!error) {
-        title = NSLocalizedString(@"SaveSuccessTitle", @"");
-        message = NSLocalizedString(@"SaveSuccessMessage", @"");
-    } else {
-        title = NSLocalizedString(@"SaveFailedTitle", @"");
-        message = [error description];
-    }
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title
-                                                    message:message
-                                                   delegate:nil
-                                          cancelButtonTitle:NSLocalizedString(@"ButtonOK", @"")
-                                          otherButtonTitles:nil];
-    [alert show];
-}
-
-
 //---------------------------------------------------------------
 //
 - (NSDictionary*)basicGetDeviceInfo

@@ -41,8 +41,6 @@
 
 - (void) setLight:(CDVInvokedUrlCommand*)command;
 
-- (void) screenshot:(CDVInvokedUrlCommand*)command;
-
 @end
 
 typedef NS_ENUM(NSInteger, EZAR_ERROR_CODE) {
