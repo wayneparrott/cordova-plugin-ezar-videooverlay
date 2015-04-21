@@ -82,6 +82,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
+    [self forceWebViewRedraw];
     
     //ACCESS DEVICE INFO: CAMERAS, ...
     NSDictionary* deviceInfoResult = [self basicGetDeviceInfo];
