@@ -41,12 +41,21 @@
 
 - (void) setLight:(CDVInvokedUrlCommand*)command;
 
+- (void) snapshot:(CDVInvokedUrlCommand*)command;
+
 @end
 
-typedef NS_ENUM(NSInteger, EZAR_ERROR_CODE) {
-    EZAR_ERROR_CODE_ERROR,
+typedef NS_ENUM(NSUInteger, EZAR_ERROR_CODE) {
+    EZAR_ERROR_CODE_ERROR=1,
     EZAR_ERROR_CODE_INVALID_ARGUMENT,
     EZAR_ERROR_CODE_INVALID_STATE,
     EZAR_ERROR_CODE_ACTIVATION
 };
+
+typedef NS_ENUM(NSUInteger, EZAR_IMAGE_ENCODING) {
+    EZAR_IMAGE_ENCODING_JPG=0,
+    EZAR_IMAGE_ENCODING_PNG
+};
+
+
 

@@ -11,6 +11,7 @@
 
 var Camera = require('./camera'),
     exec = require('cordova/exec'),
+    argscheck = require('cordova/argscheck'),
     utils = require('cordova/utils');
 
 module.exports = (function() {
@@ -127,6 +128,46 @@ module.exports = (function() {
     _ezAR.hasActiveCamera = function() {
         return _ezAR.getActiveCamera() != null;
     }
+                  
+    /**
+     * Create a screenshot image
+     *
+     *
+     */
+    
+    _ezAR.snapshot = function(successCallback,errorCallback, options) {
+            //todo: wayne - add init requirement checking
+            //if (!_self.isActive()) return;
+                  
+        //options impl inspired by cordova Camera plugin
+        options = options || {};
+        var getValue = argscheck.getValue;
+        var encodingType = getValue(options.encodingType, _ezAR.ImageEncodingType.JPEG);
+        var saveToPhotoAlbum = !!options.saveToPhotoAlbum;
+        
+        var onSuccess = function(imageData) {
+            var encoding = encodingType == _ezAR.ImageEncodingType.JPEG ? "jpeg" : "png";
+            var dataUrl = "data:image/" + encoding + ";base64," + imageData;
+            if (successCallback) {
+                  successCallback(dataUrl);
+            }
+        };
+                  
+        _ezAR.onError = errorCallback;
+                  
+        exec(onSuccess,
+             _onError,
+             "ezAR",
+             "snapshot",
+            [encodingType, saveToPhotoAlbum]);
+
+    }
+                  
+    _ezAR.ImageEncodingType = {
+        JPEG: 0,             // Return JPEG encoded image
+        PNG: 1               // Return PNG encoded image
+    };
+
     
     
     //PROTECTED ------------
@@ -141,6 +182,8 @@ module.exports = (function() {
     _ezAR._deactivateCamera = function() {
         _activeCamera = null;   
     }
+                  
+    
     
     //PRIVATE---------------
     
@@ -186,9 +229,3 @@ module.exports = (function() {
     return _ezAR;
     
 }());
-
-
-
-         
-
-    
