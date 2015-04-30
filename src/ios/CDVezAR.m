@@ -317,10 +317,47 @@ static NSString* toBase64(NSData* data) {
                                                       
         NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageBuffer];
         UIImage *cameraImage = [[UIImage alloc] initWithData:imageData];
-                                                      
+                           
+        //rotate image to match device orientation
+        UIDeviceOrientation devOrient = [[UIDevice currentDevice] orientation];
+        /*
+         switch (devOrient) {
+            case UIDeviceOrientationLandscapeLeft:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationUp];
+                break;
+            case UIDeviceOrientationPortraitUpsideDown:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationLeft];
+                break;
+            case UIDeviceOrientationLandscapeRight:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationDown];
+                break;
+            default:
+                //portrait orient; do nothing
+                break;
+        }
+         */
+        
+        switch (camController.interfaceOrientation) {
+            case UIInterfaceOrientationPortrait:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationRight];
+                break;
+            case UIInterfaceOrientationLandscapeLeft:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationDown];
+                break;
+            case UIInterfaceOrientationPortraitUpsideDown:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationLeft];
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationUp];
+                break;
+            
+        }
+        
+                           
         //assign the video frame image to the cameraView image
         ((UIImageView *)camController.view).image = cameraImage;
-                                                      
+        ((UIImageView *)camController.view).contentMode = UIViewContentModeScaleAspectFill;
+                           
         //capture the entire view hierarchy
         UIView *view = self.viewController.view;
         UIGraphicsBeginImageContextWithOptions(view.bounds.size, YES, 0);
