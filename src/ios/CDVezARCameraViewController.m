@@ -18,6 +18,7 @@
     CDVViewController* _mainController;
     AVCaptureSession* _captureSession;
     AVCaptureVideoPreviewLayer *_previewLayer;
+    //UIImage *transparentImg;
 }
 
 -(CDVezARCameraViewController*) initWithController: (CDVViewController*) mainViewController
@@ -61,10 +62,17 @@
     [_previewLayer setVideoGravity:AVLayerVideoGravityResizeAspectFill];
     _previewLayer.frame = _mainController.view.frame;
     
-    UIView *cameraView = [[UIView alloc] init];
+    //UIGraphicsBeginImageContextWithOptions(_mainController.view.frame.size, NO, 0.0);
+    //transparentImg = UIGraphicsGetImageFromCurrentImageContext();
+    //UIGraphicsEndImageContext();
+    
+    //create camera with no default image
+    UIImageView *cameraView = [[UIImageView alloc] initWithFrame:_mainController.view.frame ];
     [[cameraView layer] addSublayer: _previewLayer];
     cameraView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     cameraView.backgroundColor = [UIColor blackColor];
+    
+    cameraView.frame = _mainController.view.frame;
     
     self.view = cameraView;
     

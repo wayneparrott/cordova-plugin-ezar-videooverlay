@@ -16,12 +16,21 @@
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 
+static NSString* toBase64(NSData* data) {
+    SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
+    SEL s2 = NSSelectorFromString(@"base64EncodedString");
+    SEL realSel = [data respondsToSelector:s1] ? s1 : s2;
+    NSString* (*func)(id, SEL) = (void *)[data methodForSelector:realSel];
+    return func(data, realSel);
+}
+
 @implementation CDVezAR
 {
     CDVezARCameraViewController* camController;
     AVCaptureSession *captureSession;
     AVCaptureDevice  *backVideoDevice, *frontVideoDevice, *videoDevice;
     AVCaptureDeviceInput *backVideoDeviceInput, *frontVideoDeviceInput, *videoDeviceInput;
+    AVCaptureStillImageOutput *stillImageOutput;
     UIColor *bgColor;
 }
 
@@ -266,6 +275,119 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 }
 
 
+//
+//
+//
+- (void) snapshot:(CDVInvokedUrlCommand*)command
+{
+    EZAR_IMAGE_ENCODING encodingType = [[command argumentAtIndex:0 withDefault:@(EZAR_IMAGE_ENCODING_JPG)] unsignedIntegerValue];
+    BOOL saveToPhotoAlbum = [[command argumentAtIndex:1 withDefault:@(NO)] boolValue];
+    
+    //
+    AVCaptureConnection *videoConnection = nil;
+    for (AVCaptureConnection *connection in stillImageOutput.connections) {
+        for (AVCaptureInputPort *port in [connection inputPorts]) {
+            if ([[port mediaType] isEqual:AVMediaTypeVideo] ) {
+                videoConnection = connection;
+                break;
+            }
+        }
+        if (videoConnection) { break; }
+    }
+    
+    //workaround for xxx
+    //Capture video frame as image. The image will not include the webview content.
+    //Temporarily set the cameraView image to the video frame (a jpg) long enough
+    //to capture the entire view hierarcy as an image.
+    //
+    //NSLog(@"about to request a capture from: %@", stillImageOutput);
+    [stillImageOutput captureStillImageAsynchronouslyFromConnection: videoConnection
+                       completionHandler: ^(CMSampleBufferRef imageBuffer, NSError *error) {
+                                                      
+        if (error) {
+            NSDictionary* errorResult = [self makeErrorResult: 1 withError: error];
+                                                          
+            CDVPluginResult* pluginResult =
+                [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                messageAsDictionary: errorResult];
+                                                          
+            return  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }
+                                                      
+                                                      
+        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageBuffer];
+        UIImage *cameraImage = [[UIImage alloc] initWithData:imageData];
+                           
+        //rotate image to match device orientation
+        UIDeviceOrientation devOrient = [[UIDevice currentDevice] orientation];
+        /*
+         switch (devOrient) {
+            case UIDeviceOrientationLandscapeLeft:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationUp];
+                break;
+            case UIDeviceOrientationPortraitUpsideDown:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationLeft];
+                break;
+            case UIDeviceOrientationLandscapeRight:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationDown];
+                break;
+            default:
+                //portrait orient; do nothing
+                break;
+        }
+         */
+        
+        switch (camController.interfaceOrientation) {
+            case UIInterfaceOrientationPortrait:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationRight];
+                break;
+            case UIInterfaceOrientationLandscapeLeft:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationDown];
+                break;
+            case UIInterfaceOrientationPortraitUpsideDown:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationLeft];
+                break;
+            case UIInterfaceOrientationLandscapeRight:
+                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationUp];
+                break;
+            
+        }
+        
+                           
+        //assign the video frame image to the cameraView image
+        ((UIImageView *)camController.view).image = cameraImage;
+        ((UIImageView *)camController.view).contentMode = UIViewContentModeScaleAspectFill;
+                           
+        //capture the entire view hierarchy
+        UIView *view = self.viewController.view;
+        UIGraphicsBeginImageContextWithOptions(view.bounds.size, YES, 0);
+        [view drawViewHierarchyInRect: view.bounds afterScreenUpdates: YES];
+        UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+                                                      
+        //clear camera view image
+        ((UIImageView *)camController.view).image = nil;
+                                                      
+        if (saveToPhotoAlbum) { //save image to gallery
+            //todo: handling error saving to photo gallery
+            UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil);
+        }
+                                                      
+        //format image for return
+        NSData *screenshotData = nil;
+        if (encodingType == EZAR_IMAGE_ENCODING_JPG) {
+            screenshotData = UIImageJPEGRepresentation(screenshot, 1.0);
+        } else {
+            screenshotData = UIImagePNGRepresentation(screenshot);
+        }
+                                                      
+        CDVPluginResult* pluginResult =
+            [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(screenshotData)];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
+}
+
+
 //---------------------------------------------------------------
 //
 - (NSDictionary*)basicGetDeviceInfo
@@ -374,6 +496,14 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
                 
             [videoDevice unlockForConfiguration];
         }
+        
+        //configure to capture a video frame
+        stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+        NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+        [stillImageOutput setOutputSettings:outputSettings];
+        [captureSession addOutput: stillImageOutput];
+        
+        
     } else
     {
         error = [NSError errorWithDomain: EZAR_ERROR_DOMAIN
@@ -480,5 +610,7 @@ NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
     
 	[self.webView stringByEvaluatingJavaScriptFromString: jsstring];
 }
+
+
 
 @end
