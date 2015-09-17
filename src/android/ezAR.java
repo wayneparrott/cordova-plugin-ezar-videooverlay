@@ -51,8 +51,8 @@ public class ezAR extends CordovaPlugin {
 		cordova.getActivity().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {		   	
-				webView.setKeepScreenOn(true);
-				webView.setBackgroundColor(0x00000000); // transparent RGB
+				webView.getView().setKeepScreenOn(true);
+				webView.getView().setBackgroundColor(0x00000000); // transparent RGB
 				// webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
 				videoOverlay = new VideoOverlay(cordova.getActivity());
@@ -79,8 +79,8 @@ public class ezAR extends CordovaPlugin {
 				stoppedCameraView.setWillNotDraw(false);
 				
 				// Set to 1 because we cannot have a transparent surface view, therefore view is not shown / tiny.
-				ViewGroup vg = (ViewGroup) webView.getParent();
-				vg.removeView(webView);
+				ViewGroup vg = (ViewGroup) webView.getView().getParent();
+				vg.removeView(webView.getView());
 
 				cordova.getActivity().setContentView(stoppedCameraView, 
 						new ViewGroup.LayoutParams(
@@ -92,7 +92,7 @@ public class ezAR extends CordovaPlugin {
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
 
-				cordova.getActivity().addContentView(webView, 
+				cordova.getActivity().addContentView(webView.getView(),
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT, 
 								LayoutParams.MATCH_PARENT));
