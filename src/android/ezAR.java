@@ -10,7 +10,11 @@
  */
 package com.ezartech.ezar;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -20,10 +24,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -33,6 +40,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -158,6 +166,11 @@ public class ezAR extends CordovaPlugin {
 			this.setLight(getIntOrNull(args, 0), callbackContext);
 
 			return true;
+		} else if (action.equals("snapshot")) {
+            //JPG: 0, PNG: 1
+			this.snapshot(0, true, callbackContext);
+
+			return true;
 		}
 
 		return false;
@@ -203,6 +216,51 @@ public class ezAR extends CordovaPlugin {
 
 	private void setZoom(final int zoomValue, final CallbackContext callbackContext) {
 		videoOverlay.setZoom(zoomValue, callbackContext);
+	}
+    
+    private void snapshot(final int encodingType, final boolean saveToPhotoAlbum, final CallbackContext callbackContext) {
+        //JPG: 0, PNG: 1
+        System.out.println("snapshot");
+
+		Window window = cordova.getActivity().getWindow();
+		View rootView = window.getDecorView().getRootView();
+		rootView.setDrawingCacheEnabled(true);
+		Bitmap bitmap = Bitmap.createBitmap(rootView.getDrawingCache());
+		rootView.setDrawingCacheEnabled(false);
+
+		String title = "" + System.currentTimeMillis();
+		String path = Environment.getExternalStorageDirectory().toString() + "/" + title;
+		OutputStream out = null;
+		File imageFile = new File(path);
+
+		try {
+			out = new FileOutputStream(imageFile);
+			// choose JPEG format
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+			out.flush();
+		} catch (FileNotFoundException e) {
+			// manage exception
+		} catch (IOException e) {
+			// manage exception
+		} finally {
+
+			try {
+				if (out != null) {
+					out.close();
+					MediaStore.Images.Media.insertImage(
+							cordova.getActivity().getContentResolver(),
+							bitmap,
+							title,
+							"");
+				}
+
+			} catch (Exception exc) {
+			}
+
+		}
+
+
+
 	}
 
 	private static int getIntOrNull(JSONArray args, int i) {
