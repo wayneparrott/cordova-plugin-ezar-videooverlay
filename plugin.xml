@@ -59,8 +59,7 @@
 	  </config-file>
 	  <config-file parent="/*" target="AndroidManifest.xml" />
 	  <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar" />
-	  <source-file src="src/android/VideoOverlay.java" target-dir="src/com/ezartech/ezar" />
-	  <source-file src="src/android/Facing.java" target-dir="src/com/ezartech/ezar" />
+	  <source-file src="src/android/CameraDirection.java" target-dir="src/com/ezartech/ezar" />
   </platform>
    
 </plugin>
