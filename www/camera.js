@@ -123,6 +123,14 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 		return _hasZoom;
 	};
 	
+    /**
+	 * Maximum magnification level
+	 * @return {float} a value between 1.0 and maxZoom
+	 */
+	this.getMaxZoom = function() {
+		return _maxZoom;
+	};
+    
 	/**
 	 * Current magnification level
 	 * @return {float} a value between 1.0 and maxZoom
