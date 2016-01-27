@@ -10,6 +10,7 @@
  */
 package com.ezartech.ezar;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -49,6 +50,7 @@ import android.hardware.Camera.Parameters;
 import android.media.MediaActionSound;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
@@ -115,7 +117,7 @@ public class ezAR extends CordovaPlugin {
 												int width, int height) {
 			if (isPreviewing) {
 				updateCameraDisplayOrientation();
-				configureTransform(width, height);
+				cameraView.setTransform(computePreviewTransform(width, height));
 			}
 		}
 
@@ -286,7 +288,7 @@ public class ezAR extends CordovaPlugin {
 				" " + "isShown " + cameraView.isShown() +
 				" " + cameraView.getWidth() + ", " + cameraView.getHeight());
 
-		startPreview(cameraDir,zoom,light,callbackContext);
+		startPreview(cameraDir, zoom, light, callbackContext);
 	}
 
 
@@ -326,7 +328,7 @@ public class ezAR extends CordovaPlugin {
 				try {
 					isPreviewing = true;
 					updateCameraDisplayOrientation();
-					configureTransform(cameraView.getWidth(), cameraView.getHeight());
+					cameraView.setTransform(computePreviewTransform(cameraView.getWidth(), cameraView.getHeight()));
 					camera.startPreview();
 					webView.setBackgroundColor(Color.TRANSPARENT);
 					setZoom((int) zoom, null);
@@ -336,7 +338,7 @@ public class ezAR extends CordovaPlugin {
 						callbackContext.success();
 					}
 
-				} catch(Exception e) {
+				} catch (Exception e) {
 					Log.e(TAG, "Error during preview create", e);
 					// callbackContext.error(TAG + ": " + e.getMessage());
 				}
@@ -427,10 +429,14 @@ public class ezAR extends CordovaPlugin {
 		previewSize = chooseOptimalPreviewSize(cameraParameters.getSupportedPreviewSizes(),
 				cameraView.getWidth(), cameraView.getHeight());
 
+		chooseOptimalPictureSize(cameraParameters.getSupportedPictureSizes(),0,0);
 
 		cameraParameters.setPreviewSize(previewSize.width,previewSize.height);
-		//cameraParameters.setRotation(0);
-		//Camera.Size sz = cameraParameters.getPreferredPreviewSizeForVideo();
+
+		//cameraParameters.setPictureSize(previewSize.width, previewSize.height);
+		Camera.Size s = cameraParameters.getPreviewSize();
+		Log.i(TAG,"PIC SZ W: " + s.width + "  H: " + s.height);
+
 		camera.setParameters(cameraParameters);
 
 		try {
@@ -452,9 +458,6 @@ public class ezAR extends CordovaPlugin {
 		for (Camera.Size size : previewSizes) {
 			Log.d(TAG, "preview size " + size.width + "," + size.height);
 
-			//todo remove this hack asap
-			//if (size.width == 1600 || size.width == 640) return size;
-
 			float r1 = (float)size.width / (float)size.height;
 			float r2 = 4f / 3f;
 			if (r1 == r2) return size;
@@ -471,17 +474,9 @@ public class ezAR extends CordovaPlugin {
 
 	private void snapshot(final int encodingType, final boolean saveToPhotoAlbum, final CallbackContext callbackContext) {
 		//JPG: 0, PNG: 1
-		Log.d(TAG,"snapshot");
+		Log.d(TAG, "snapshot");
 
 		//get image frame from video stream
-
-		/*
-		int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-		Camera.Parameters parameters = camera.getParameters();
-		parameters.setRotation(rotation); //set rotation to save the picture
-		camera.setParameters(parameters);
- 		*/
-
 		camera.takePicture(
 				new Camera.ShutterCallback() {
 					@Override
@@ -496,13 +491,14 @@ public class ezAR extends CordovaPlugin {
 					@Override
 					public void onPictureTaken(byte[] data, final Camera camera) {
 						buildAndSaveSnapshotImage(data,
-								encodingType == 0 ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG);
+								encodingType == 0 ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG,
+								callbackContext);
 					}
 				}
 		);
 	}
 
-	private void buildAndSaveSnapshotImage(byte[] takePicData, Bitmap.CompressFormat format) {
+	private void buildAndSaveSnapshotImage(byte[] takePicData, Bitmap.CompressFormat format, final CallbackContext callbackContext) {
 		final View wv = webView;
 
 		//render video image on stopped
@@ -510,9 +506,12 @@ public class ezAR extends CordovaPlugin {
 
 		int w = rawVideoFrame.getWidth();
 		int h = rawVideoFrame.getHeight();
+		Log.i(TAG,"build snapshot,  videoframe w: " + w + "  h: " + h);
+
+		//Matrix mtx = computePictureTransform(1200,1824);
 		Matrix mtx = new Matrix();
-		int rotAngle = getRoatationAngle(cameraId);
-		mtx.postRotate(rotAngle);
+		mtx.setScale(1.5f,0.5f);
+
 
 		final Bitmap videoFrame = Bitmap.createBitmap(rawVideoFrame, 0, 0, w, h, mtx, true);
 
@@ -547,11 +546,31 @@ public class ezAR extends CordovaPlugin {
 
 				//save snapshot image to gallery
 				String title = "" + System.currentTimeMillis();
-				MediaStore.Images.Media.insertImage(
+				String url = MediaStore.Images.Media.insertImage(
 						activity.getContentResolver(),
 						bitmap,
 						title,
 						"");
+
+				Log.i(TAG, "SAVED image: " + url);
+
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+				byte[] bytes = baos.toByteArray();
+				String imageEncoded = Base64.encodeToString(bytes, Base64.DEFAULT);
+				callbackContext.success(imageEncoded);
+
+				bitmap = null;
+				canvas = null;
+				webViewBitmap = null;
+				webViewCanvas = null;
+				imageEncoded = null;
+				try {
+					baos.close();
+				} catch (Exception ex) {
+					//do nothing during clean up
+				}
+
 			}
 		}); //post
 	}
@@ -632,6 +651,8 @@ public class ezAR extends CordovaPlugin {
 		Camera.Parameters params = camera.getParameters();
 		params.setRotation(result);
 		camera.setParameters(params);
+
+		Log.i(TAG,"updateCameraDeviceOrientation: " + result);
 	}
 
 	/**
@@ -669,11 +690,11 @@ public class ezAR extends CordovaPlugin {
 		return result;
 	}
 
-	private void configureTransform(int width, int height)
+	private Matrix computePreviewTransform(int width, int height)
 	{
 		Log.d(TAG, "computeTransform, width: " + width + " ht: " + height);
 
-		if (!isPreviewing) return;
+		if (!isPreviewing) return new Matrix();
 		Camera.Parameters cameraParameters = camera.getParameters();
 		Camera.Size sz = cameraParameters.getPreviewSize();
 		Log.d(TAG, "computeTransform, pvwidth: " + sz.width + " pvht: " + sz.height);
@@ -704,9 +725,51 @@ public class ezAR extends CordovaPlugin {
 
 		Matrix matrix = new Matrix();
 		matrix.setScale(scaleX, scaleY);
-		cameraView.setTransform(matrix);
+
+		return matrix;
 	}
 
+
+	private Matrix computePictureTransform(int width, int height)
+	{
+		Log.d(TAG, "computePICTURETransform, width: " + width + " ht: " + height);
+
+		Camera.Parameters cameraParameters = camera.getParameters();
+		Camera.Size sz = cameraParameters.getPictureSize();
+		Log.d(TAG, "computePICTURETransform, pic width: " + sz.width + " pic ht: " + sz.height);
+
+		boolean isPortrait = false;
+
+		Display display = activity.getWindowManager().getDefaultDisplay();
+		if (display.getRotation() == Surface.ROTATION_0 || display.getRotation() == Surface.ROTATION_180) isPortrait = true;
+		else if (display.getRotation() == Surface.ROTATION_90 || display.getRotation() == Surface.ROTATION_270) isPortrait = false;
+
+		int previewWidth = previewSize.width;
+		int previewHeight = previewSize.height;
+
+		if (isPortrait)
+		{
+			previewWidth = previewSize.height;
+			previewHeight = previewSize.width;
+		}
+		float scaleX = 1;
+		float scaleY = 1;
+
+		if (isPortrait) {
+			scaleX = (float)height / (float)previewHeight * (float)previewWidth / (float)width;
+		} else {
+			scaleY = (float)width / (float)previewWidth * (float)previewHeight / (float)height;
+		}
+
+		scaleX = 1.0f;
+
+		Log.d(TAG, "computeMatrix, scaledX: " + scaleX + " scaleY: " + scaleY);
+
+		Matrix matrix = new Matrix();
+		matrix.setScale(scaleX, scaleY);
+
+		return matrix;
+	}
 
 	private static int getIntOrNull(JSONArray args, int i) {
 		if (args.isNull(i)) {
@@ -734,6 +797,11 @@ public class ezAR extends CordovaPlugin {
 		}
 	}
 
+	private void chooseOptimalPictureSize(List<Camera.Size> previewSizes, int width, int height) {
+		for (Camera.Size size : previewSizes) {
+			Log.d(TAG, "PICTURE size " + size.width + "," + size.height);
+		}
 
+	}
 
 }
