@@ -16,12 +16,28 @@
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 
+#ifndef __CORDOVA_4_0_0
+#import <Cordova/NSData+Base64.h>
+#endif
+
+//copied from cordova camera plugin
 static NSString* toBase64(NSData* data) {
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
     SEL s2 = NSSelectorFromString(@"base64EncodedString");
-    SEL realSel = [data respondsToSelector:s1] ? s1 : s2;
-    NSString* (*func)(id, SEL) = (void *)[data methodForSelector:realSel];
-    return func(data, realSel);
+    SEL s3 = NSSelectorFromString(@"base64EncodedStringWithOptions:");
+    
+    if ([data respondsToSelector:s1]) {
+        NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s1];
+        return func(data, s1);
+    } else if ([data respondsToSelector:s2]) {
+        NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s2];
+        return func(data, s2);
+    } else if ([data respondsToSelector:s3]) {
+        NSString* (*func)(id, SEL, NSUInteger) = (void *)[data methodForSelector:s3];
+        return func(data, s3, 0);
+    } else {
+        return nil;
+    }
 }
 
 @implementation CDVezAR
@@ -382,7 +398,9 @@ static NSString* toBase64(NSData* data) {
         }
                                                       
         CDVPluginResult* pluginResult =
-            [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(screenshotData)];
+            [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:
+                toBase64(screenshotData)];
+                           
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }];
 }
@@ -608,7 +626,7 @@ static NSString* toBase64(NSData* data) {
         @"document.body.style.display='none';"
          "setTimeout(function(){document.body.style.display='block'},10);";
     
-    //todo provide compatibility if this is a wkwebview component
+    //todo add logic to account for wkwebview
 	[(UIWebView*)self.webView stringByEvaluatingJavaScriptFromString: jsstring];
 }
 
