@@ -608,7 +608,8 @@ static NSString* toBase64(NSData* data) {
         @"document.body.style.display='none';"
          "setTimeout(function(){document.body.style.display='block'},10);";
     
-	[self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+    //todo provide compatibility if this is a wkwebview component
+	[(UIWebView*)self.webView stringByEvaluatingJavaScriptFromString: jsstring];
 }
 
 
