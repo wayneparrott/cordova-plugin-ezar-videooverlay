@@ -1,5 +1,5 @@
 /*
- * CDVezAR.m
+ * CDVezARVideoOverlay.m
  *
  * Copyright 2015, ezAR Technologies
  * http://ezartech.com
@@ -11,14 +11,14 @@
  *
  */
  
-#import "CDVezAR.h"
+#import "CDVezARVideoOverlay.h"
 #import "CDVezARCameraViewController.h"
 #import "MainViewController.h"
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 NSInteger const EZAR_VIEW_TAG = 999;
 
-@implementation CDVezAR
+@implementation CDVezARVideoOverlay
 {
     CDVezARCameraViewController* camController;
     AVCaptureSession *captureSession;
@@ -277,11 +277,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
-
-- (BOOL) isEZARAvailable
-{
-    return [self.viewController.view viewWithTag: EZAR_VIEW_TAG] == nil;
-}
+ 
 
 - (AVCaptureSession *) getAVCaptureSession
 {

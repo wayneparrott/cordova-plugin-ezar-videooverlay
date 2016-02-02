@@ -4,8 +4,8 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
 	  xmlns:android="http://schemas.android.com/apk/res/android"
-	  id="com.ezartech.ezar"
-	  version="0.1.2">
+	  id="com.ezartech.ezar.videooverlay"
+	  version="0.1.3">
 	  
 	<name>ezAR Startup Kit</name>
 	<description>Augmented reality SDK for Cordova hybrid-mobile applications. 
@@ -17,7 +17,7 @@
 	<license>modified MIT License, see http://ezartech.com/ezarstartupkit-license</license>
 
 	<!-- web api -->
-	<js-module src="www/ezar.js" name="ezar">
+	<js-module src="www/videoOverlay.js" name="videoOverlay">
 		<merges target="ezar" />
 	</js-module>
 	
@@ -28,13 +28,13 @@
 	<!-- ios -->
 	<platform name="ios">
 		<config-file target="config.xml" parent="/*">
-			<feature name="ezAR">
-				<param name="ios-package" value="CDVezAR"/>
+			<feature name="videoOverlay">
+				<param name="ios-package" value="CDVezARVideoOverlay"/>
 			</feature>
 		</config-file>
-		<header-file src="src/ios/CDVezAR.h" />
+		<header-file src="src/ios/CDVezARVideoOverlay.h" />
 		<header-file src="src/ios/CDVezARCameraViewController.h" /> 
-		<source-file src="src/ios/CDVezAR.m" />
+		<source-file src="src/ios/CDVezARVideoOverlay.m" />
 		<source-file src="src/ios/CDVezARCameraViewController.m" />
 		
 		<framework src="UIKit.framework" />
