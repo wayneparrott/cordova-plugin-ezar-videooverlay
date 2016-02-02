@@ -13,32 +13,10 @@
  
 #import "CDVezAR.h"
 #import "CDVezARCameraViewController.h"
+#import "MainViewController.h"
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
-
-#ifndef __CORDOVA_4_0_0
-#import <Cordova/NSData+Base64.h>
-#endif
-
-//copied from cordova camera plugin
-static NSString* toBase64(NSData* data) {
-    SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
-    SEL s2 = NSSelectorFromString(@"base64EncodedString");
-    SEL s3 = NSSelectorFromString(@"base64EncodedStringWithOptions:");
-    
-    if ([data respondsToSelector:s1]) {
-        NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s1];
-        return func(data, s1);
-    } else if ([data respondsToSelector:s2]) {
-        NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s2];
-        return func(data, s2);
-    } else if ([data respondsToSelector:s3]) {
-        NSString* (*func)(id, SEL, NSUInteger) = (void *)[data methodForSelector:s3];
-        return func(data, s3, 0);
-    } else {
-        return nil;
-    }
-}
+NSInteger const EZAR_VIEW_TAG = 999;
 
 @implementation CDVezAR
 {
@@ -46,7 +24,7 @@ static NSString* toBase64(NSData* data) {
     AVCaptureSession *captureSession;
     AVCaptureDevice  *backVideoDevice, *frontVideoDevice, *videoDevice;
     AVCaptureDeviceInput *backVideoDeviceInput, *frontVideoDeviceInput, *videoDeviceInput;
-    AVCaptureStillImageOutput *stillImageOutput;
+    //AVCaptureStillImageOutput *stillImageOutput;
     UIColor *bgColor;
 }
 
@@ -104,6 +82,7 @@ static NSString* toBase64(NSData* data) {
                     initWithController: (CDVViewController*)self.viewController
                     session: captureSession];
     camController.view;
+    camController.view.tag = EZAR_VIEW_TAG;
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
@@ -170,6 +149,15 @@ static NSString* toBase64(NSData* data) {
 //
 //
 //
+- (BOOL) isCameraRunning
+{
+    return self.getAVCaptureSession && [self.getAVCaptureSession isRunning];
+}
+
+
+//
+//
+//
 - (void)startCamera:(CDVInvokedUrlCommand*)command
 {
     NSString* cameraPos = [command.arguments objectAtIndex:0];
@@ -190,7 +178,7 @@ static NSString* toBase64(NSData* data) {
     }
 
     //SET WEBVIEW TRANSPARENT BACKGROUND
-    self.webView.backgroundColor = [UIColor clearColor ];
+    self.webView.backgroundColor = [UIColor clearColor];
    
     
     //START THE CAPTURE SESSION
@@ -290,119 +278,14 @@ static NSString* toBase64(NSData* data) {
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-
-//
-//
-//
-- (void) snapshot:(CDVInvokedUrlCommand*)command
+- (BOOL) isEZARAvailable
 {
-    EZAR_IMAGE_ENCODING encodingType = [[command argumentAtIndex:0 withDefault:@(EZAR_IMAGE_ENCODING_JPG)] unsignedIntegerValue];
-    BOOL saveToPhotoAlbum = [[command argumentAtIndex:1 withDefault:@(NO)] boolValue];
-    
-    //
-    AVCaptureConnection *videoConnection = nil;
-    for (AVCaptureConnection *connection in stillImageOutput.connections) {
-        for (AVCaptureInputPort *port in [connection inputPorts]) {
-            if ([[port mediaType] isEqual:AVMediaTypeVideo] ) {
-                videoConnection = connection;
-                break;
-            }
-        }
-        if (videoConnection) { break; }
-    }
-    
-    //workaround for xxx
-    //Capture video frame as image. The image will not include the webview content.
-    //Temporarily set the cameraView image to the video frame (a jpg) long enough
-    //to capture the entire view hierarcy as an image.
-    //
-    //NSLog(@"about to request a capture from: %@", stillImageOutput);
-    [stillImageOutput captureStillImageAsynchronouslyFromConnection: videoConnection
-                       completionHandler: ^(CMSampleBufferRef imageBuffer, NSError *error) {
-                                                      
-        if (error) {
-            NSDictionary* errorResult = [self makeErrorResult: 1 withError: error];
-                                                          
-            CDVPluginResult* pluginResult =
-                [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                messageAsDictionary: errorResult];
-                                                          
-            return  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        }
-                                                      
-                                                      
-        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageBuffer];
-        UIImage *cameraImage = [[UIImage alloc] initWithData:imageData];
-                           
-        //rotate image to match device orientation
-        UIDeviceOrientation devOrient = [[UIDevice currentDevice] orientation];
-        /*
-         switch (devOrient) {
-            case UIDeviceOrientationLandscapeLeft:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationUp];
-                break;
-            case UIDeviceOrientationPortraitUpsideDown:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationLeft];
-                break;
-            case UIDeviceOrientationLandscapeRight:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationDown];
-                break;
-            default:
-                //portrait orient; do nothing
-                break;
-        }
-         */
-        
-        switch (camController.interfaceOrientation) {
-            case UIInterfaceOrientationPortrait:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationRight];
-                break;
-            case UIInterfaceOrientationLandscapeLeft:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationDown];
-                break;
-            case UIInterfaceOrientationPortraitUpsideDown:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationLeft];
-                break;
-            case UIInterfaceOrientationLandscapeRight:
-                cameraImage = [UIImage imageWithCGImage: [cameraImage CGImage] scale:1.0 orientation:UIImageOrientationUp];
-                break;
-            
-        }
-        
-                           
-        //assign the video frame image to the cameraView image
-        ((UIImageView *)camController.view).image = cameraImage;
-        ((UIImageView *)camController.view).contentMode = UIViewContentModeScaleAspectFill;
-                           
-        //capture the entire view hierarchy
-        UIView *view = self.viewController.view;
-        UIGraphicsBeginImageContextWithOptions(view.bounds.size, YES, 0);
-        [view drawViewHierarchyInRect: view.bounds afterScreenUpdates: YES];
-        UIImage* screenshot = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-                                                      
-        //clear camera view image
-        ((UIImageView *)camController.view).image = nil;
-                                                      
-        if (saveToPhotoAlbum) { //save image to gallery
-            //todo: handling error saving to photo gallery
-            UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil);
-        }
-                                                      
-        //format image for return
-        NSData *screenshotData = nil;
-        if (encodingType == EZAR_IMAGE_ENCODING_JPG) {
-            screenshotData = UIImageJPEGRepresentation(screenshot, 1.0);
-        } else {
-            screenshotData = UIImagePNGRepresentation(screenshot);
-        }
-                                                      
-        CDVPluginResult* pluginResult =
-            [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:
-                toBase64(screenshotData)];
-                           
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }];
+    return [self.viewController.view viewWithTag: EZAR_VIEW_TAG] == nil;
+}
+
+- (AVCaptureSession *) getAVCaptureSession
+{
+    return captureSession;
 }
 
 
@@ -410,7 +293,7 @@ static NSString* toBase64(NSData* data) {
 //
 - (NSDictionary*)basicGetDeviceInfo
 {
-    NSMutableDictionary* deviceInfo = 
+    NSMutableDictionary* deviceInfo =
     	[NSMutableDictionary dictionaryWithDictionary: [self basicGetCameras]];
 
     CGRect screenRect = [[UIScreen mainScreen] bounds];
@@ -516,10 +399,10 @@ static NSString* toBase64(NSData* data) {
         }
         
         //configure to capture a video frame
-        stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-        NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
-        [stillImageOutput setOutputSettings:outputSettings];
-        [captureSession addOutput: stillImageOutput];
+        //stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+        //NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+        //[stillImageOutput setOutputSettings:outputSettings];
+        //[captureSession addOutput: stillImageOutput];
         
         
     } else
@@ -542,7 +425,6 @@ static NSString* toBase64(NSData* data) {
     [self basicStopCamera];
     
     [captureSession removeInput: videoDeviceInput];
-    
     videoDevice = nil;
     videoDeviceInput = nil;
     
@@ -554,7 +436,7 @@ static NSString* toBase64(NSData* data) {
 //
 - (void)basicStopCamera
 {
-    if (captureSession && [captureSession isRunning]) {
+    if ([self isCameraRunning]) {
         //----- STOP THE CAPTURE SESSION RUNNING -----
         [captureSession stopRunning];
         self.webView.backgroundColor = bgColor;

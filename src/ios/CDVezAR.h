@@ -27,6 +27,8 @@
 
 - (void) deactivateCamera:(CDVInvokedUrlCommand*)command;
 
+- (BOOL) isCameraRunning;
+
 - (void) startCamera:(CDVInvokedUrlCommand*)command;
 
 - (void) stopCamera:(CDVInvokedUrlCommand*)command;
@@ -41,7 +43,7 @@
 
 - (void) setLight:(CDVInvokedUrlCommand*)command;
 
-- (void) snapshot:(CDVInvokedUrlCommand*)command;
+- (AVCaptureSession *) getAVCaptureSession;
 
 @end
 
