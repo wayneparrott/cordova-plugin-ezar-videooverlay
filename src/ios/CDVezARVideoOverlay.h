@@ -1,5 +1,5 @@
 /**
- * CDVezAR.h
+ * CDVezARVideoOverlay.h
  *
  * Copyright 2015, ezAR Technologies
  * http://ezartech.com
@@ -17,7 +17,7 @@
 /**
  * Implements the ezAR Cordova api. 
  */
-@interface CDVezAR : CDVPlugin
+@interface CDVezARVideoOverlay : CDVPlugin
 
 - (void) init:(CDVInvokedUrlCommand*)command;
 

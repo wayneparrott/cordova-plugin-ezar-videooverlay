@@ -108,7 +108,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
         if (_self.isActive() && _self.isRunning()) {
             exec( successCB,
                   errorCB,
-                 "ezAR",
+                 "ezARVideoOverlay",
                  "setLight",
                  [_light]);
         } 
@@ -151,7 +151,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
         if (_self.isActive() && _self.isRunning()) {
             exec(function() {console.log('success');},
                  function(error) {console.log('error: ' + error); },
-                 "ezAR",
+                 "videoOverlay",
                  "setZoom",
                  [_zoom]);
         }
@@ -176,7 +176,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
             		 errorCallback(data);
             	 }
              },
-             "ezAR",
+             "videoOverlay",
              "startCamera",
              [_self.getPosition(),
               _self.hasZoom() ? _self.getZoom() : 0,
@@ -202,7 +202,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
                     errorCallback(error);
                 }
              },
-             "ezAR",
+             "videoOverlay",
              "stopCamera",
              []);
     };
