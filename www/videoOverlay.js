@@ -1,12 +1,11 @@
 /**
- * ezar.js
- * Copyright 2015, ezAR Technologies
+ * videoOverlay.js
+ * Copyright 2015-2016, ezAR Technologies
  * Licensed under a modified MIT license, see LICENSE or http://ezartech.com/ezarstartupkit-license
  * 
- * @file Implements the ezar api for controlling device cameras, 
- *  zoom level and lighting. 
+ * @file Implements the ezar video overlay api for controlling device cameras, zoom level. 
  * @author @wayne_parrott, @vridosh, @kwparrott
- * @version 0.1.0 
+ * @version 0.1.2 
  */
 
 var Camera = require('./camera'),
@@ -28,18 +27,18 @@ module.exports = (function() {
      * Has ezAR been successfully initialized.
      * @return {boolean} true when initialize() completes successfully
      */
-    _ezAR.isInitialized = function() {
+    _ezAR.isVideoOverlayInitialized = function() {
         return _isInitialized;
     }
    
     /**
-     * Initialize ezAR internal state, cameras, light and zoom features.
+     * Initialize ezAR internal state, cameras and zoom features.
      * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error
      */
-    _ezAR.initialize = function(successCallback,errorCallback) {
+    _ezAR.initializeVideoOverlay = function(successCallback,errorCallback) {
         //execute successCallback immediately if already initialized
-    	if (_ezAR.isInitialized()) {
+    	if (_ezAR.isVideoOverlayInitialized()) {
            if (isFunction(successCallback)) successCallback();
            return;
         }
@@ -162,9 +161,7 @@ module.exports = (function() {
         var position = cameraData.position;
         var zoom = cameraData.zoom
         var maxZoom = cameraData.maxZoom;
-        var hasLight = cameraData.light;
-        var lightLevel = hasLight ? cameraData.lightLevel : 0;
-        var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom,hasLight,lightLevel);
+        var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom);
                   
                   //console.log("camera: " + camera);
                   //console.log(camera);
@@ -173,7 +170,6 @@ module.exports = (function() {
     }
                   
     function initCameras(deviceData) {
-        CAMS = deviceData;
         //console.log(deviceData);
                   
         if ('FRONT' in deviceData) {

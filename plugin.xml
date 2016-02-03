@@ -40,8 +40,10 @@
 		<framework src="UIKit.framework" />
 		<framework src="Foundation.framework" />
 		<framework src="AVFoundation.framework" />
+		<!--
 		<framework src="CoreImage.framework" />
 		<framework src="CoreVideo.framework" />
+		-->
 	</platform>
 
 	<!-- android -->
