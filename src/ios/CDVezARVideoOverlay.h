@@ -33,15 +33,9 @@
 
 - (void) stopCamera:(CDVInvokedUrlCommand*)command;
 
-- (void) maxZoom:(CDVInvokedUrlCommand*)command;
-
 - (void) getZoom:(CDVInvokedUrlCommand*)command;
 
 - (void) setZoom:(CDVInvokedUrlCommand*)command;
-
-- (void) getLight:(CDVInvokedUrlCommand*)command;
-
-- (void) setLight:(CDVInvokedUrlCommand*)command;
 
 - (AVCaptureSession *) getAVCaptureSession;
 

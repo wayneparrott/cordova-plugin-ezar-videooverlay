@@ -37,7 +37,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
 
 // SETUP EZAR 
 // Create camera view and preview, make webview transparent.
-// return camera, light features and display details
+// return camera, zoom features and display details
 // 
 - (void)init:(CDVInvokedUrlCommand*)command
 {
@@ -121,13 +121,10 @@ NSInteger const EZAR_VIEW_TAG = 999;
 
     NSNumber* zoomArg = [command.arguments objectAtIndex:1];
     double zoomLevel = [zoomArg doubleValue];
-
-    NSNumber* lightArg = [command.arguments objectAtIndex:2];
-    int lightLevel = (int)[lightArg integerValue];
     
     //todo add error handling
     NSError *error;
-    [self basicActivateCamera: cameraPos zoom: zoomLevel light: lightLevel error: error];
+    [self basicActivateCamera: cameraPos zoom: zoomLevel error: error];
 
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
@@ -165,13 +162,10 @@ NSInteger const EZAR_VIEW_TAG = 999;
     NSNumber* zoomArg = [command.arguments objectAtIndex:1];
     double zoomLevel = [zoomArg doubleValue];
     
-    NSNumber* lightArg = [command.arguments objectAtIndex:2];
-    int lightLevel = (int)[lightArg integerValue];
-    
     [self basicDeactivateCamera]; //stops camera if running before deactivation
     
     NSError *error;
-    [self basicActivateCamera: cameraPos zoom: zoomLevel light: lightLevel error: error];
+    [self basicActivateCamera: cameraPos zoom: zoomLevel error: error];
     
     if (error) {
         
@@ -204,6 +198,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
 //
 //
 //
+/*
 - (void) maxZoom:(CDVInvokedUrlCommand*)command
 {
     CGFloat result = videoDeviceInput.device.activeFormat.videoZoomFactorUpscaleThreshold;
@@ -213,7 +208,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
     
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
-
+*/
 
 //
 //
@@ -241,40 +236,6 @@ NSInteger const EZAR_VIEW_TAG = 999;
     
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-
-//
-//
-//
-- (void) getLight:(CDVInvokedUrlCommand*)command
-{
-    NSInteger lightLevel = -1;
-    
-    if ([videoDevice hasTorch]) {
-        lightLevel = videoDevice.torchMode;
-    }
-    
-    //int x = lightLevel;
-    
-    CDVPluginResult* pluginResult =
-        [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt: (int)lightLevel];
-    
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-
-//
-//
-//
-- (void) setLight:(CDVInvokedUrlCommand*)command
-{
-    NSNumber* lightArg = [command.arguments objectAtIndex:0];
-    int lightLevel = (int)[lightArg integerValue];
-    [self basicSetLight: lightLevel];
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
  
@@ -331,13 +292,8 @@ NSInteger const EZAR_VIEW_TAG = 999;
     NSMutableDictionary* cameraProps = [NSMutableDictionary dictionaryWithCapacity:4];
     [cameraProps setObject: camera.uniqueID forKey:@"id"];
     
-    [cameraProps setObject: @(camera.activeFormat.videoZoomFactorUpscaleThreshold) forKey:@"maxZoom"];
+    [cameraProps setObject: @(camera.activeFormat.videoMaxZoomFactor) forKey:@"maxZoom"];
     [cameraProps setObject: @(camera.videoZoomFactor) forKey:@"zoom"];
-    
-    [cameraProps setObject: @([camera hasTorch]) forKey:@"light"];
-    if ([camera hasTorch]) {
-        [cameraProps setObject: @(camera.torchLevel) forKey:@"lightLevel"];
-    }
     
     if ([camera position] == AVCaptureDevicePositionFront) {
         [cameraProps setObject: @"FRONT" forKey:@"position"];
@@ -351,7 +307,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
 //
 //
 //
-- (void)basicActivateCamera: (NSString*)cameraPos zoom: (double)zoomLevel light: (int)lightLevel error: (NSError*) error
+- (void)basicActivateCamera: (NSString*)cameraPos zoom: (double)zoomLevel error: (NSError*) error
 {
     videoDevice = nil;
     videoDeviceInput = nil;
@@ -389,7 +345,6 @@ NSInteger const EZAR_VIEW_TAG = 999;
             }
                 
             [self basicSetZoom: zoomLevel];
-            [self basicSetLight: lightLevel];
                 
             [videoDevice unlockForConfiguration];
         }
@@ -446,21 +401,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
 - (void) basicSetZoom:(double) zoomLevel
 {
     if ([videoDevice lockForConfiguration:nil]) {
-        [videoDevice setVideoZoomFactor:zoomLevel];
-        [videoDevice unlockForConfiguration];
-    }
-}
-
-
-//
-//
-//
-- (void) basicSetLight: (int)lightLevel
-{
-    if (![videoDevice hasTorch]) return;
-    
-    if ([videoDevice lockForConfiguration:nil]) {
-        [videoDevice setTorchMode: lightLevel];
+        [videoDevice setVideoZoomFactor: MAX(1.0,zoomLevel)];
         [videoDevice unlockForConfiguration];
     }
 }
