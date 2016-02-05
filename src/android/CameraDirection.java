@@ -9,7 +9,7 @@
  * Please see LICENSE or http://ezartech.com/ezarstartupkit-license for more information
  *
  */
-package com.ezartech.ezar;
+package com.ezartech.ezar.videooverlay;
 
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
