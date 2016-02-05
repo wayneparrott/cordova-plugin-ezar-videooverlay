@@ -49,8 +49,9 @@
 	<!-- android -->
 	<platform name="android">
 	  <config-file parent="/*" target="res/xml/config.xml">
-		 <feature name="ezAR">
-			<param name="android-package" value="com.ezartech.ezar.ezAR" />
+		 <feature name="videoOverlay">
+			<param name="android-package" value="com.ezartech.ezar.videooverlay.ezAR" />
+            <param name="onload" value="false" />
 		 </feature>
 	  </config-file>
 	  <config-file target="AndroidManifest.xml" parent="/*">
@@ -60,8 +61,8 @@
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	  </config-file>
 	  <config-file parent="/*" target="AndroidManifest.xml" />
-	  <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar" />
-	  <source-file src="src/android/CameraDirection.java" target-dir="src/com/ezartech/ezar" />
+	  <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/videooverlay" />
+	  <source-file src="src/android/CameraDirection.java" target-dir="src/com/ezartech/ezar/videooverlay" />
   </platform>
    
 </plugin>
