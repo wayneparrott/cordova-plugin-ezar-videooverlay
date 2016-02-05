@@ -8,17 +8,12 @@
  * Please see LICENSE or http://ezartech.com/ezarstartupkit-license for more information
  *
  */
-package com.ezartech.ezar;
+package com.ezartech.ezar.videooverlay;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import org.apache.cordova.CallbackContext;
@@ -30,8 +25,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -41,32 +34,22 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.media.MediaActionSound;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceHolder.Callback;
-import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
 import android.webkit.WebView;
-import android.widget.TextView;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -74,10 +57,17 @@ import android.widget.TextView;
 public class ezAR extends CordovaPlugin {
 	private static final String TAG = "ezAR";
 
+	//event type code
+	static final int UNDEFINED 	= -1;
+	static final int STARTED 	= 0;
+	static final int STOPPED 	= 1;
+
+
 	static int CNT = 0;
 
+
 	private Activity activity;
-	private View webView;
+	private View webViewView;
 	private TextureView cameraView;
 	private MediaActionSound mSound;
 	private int displayWidth, displayHeight;
@@ -136,7 +126,7 @@ public class ezAR extends CordovaPlugin {
 	public void initialize(final CordovaInterface cordova, final CordovaWebView cvWebView) {
 		super.initialize(cordova, cvWebView);
 
-		webView = cvWebView.getView();
+		webViewView = cvWebView.getView();
 
 		activity = cordova.getActivity();
 		activity.runOnUiThread(new Runnable() {
@@ -144,12 +134,12 @@ public class ezAR extends CordovaPlugin {
 			public void run() {
 
 				//configure webview
-				webView.setKeepScreenOn(true);
-				webView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
-				webView.setBackgroundColor(Color.BLACK);
+				webViewView.setKeepScreenOn(true);
+				webViewView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+				webViewView.setBackgroundColor(Color.BLACK);
 
 				//temporarily remove webview from view stack
-				((ViewGroup) webView.getParent()).removeView(webView);
+				((ViewGroup) webViewView.getParent()).removeView(webViewView);
 
 				//create & add videoOverlay to view stack
 				cameraView = new TextureView(activity);
@@ -161,7 +151,7 @@ public class ezAR extends CordovaPlugin {
 				cameraView.setSurfaceTextureListener(mSurfaceTextureListener);
 
 				//add webview on top of videoOverlay
-				activity.addContentView(webView,
+				activity.addContentView(webViewView,
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
@@ -248,7 +238,7 @@ public class ezAR extends CordovaPlugin {
 
 				CameraDirection type = null;
 				for (CameraDirection f : CameraDirection.values()) {
-					if (f.getCameraInfoFacing() == cameraInfo.facing) {
+					if (f.getOrdinal() == cameraInfo.facing) {
 						type = f;
 					}
 				}
@@ -330,9 +320,10 @@ public class ezAR extends CordovaPlugin {
 					updateCameraDisplayOrientation();
 					cameraView.setTransform(computePreviewTransform(cameraView.getWidth(), cameraView.getHeight()));
 					camera.startPreview();
-					webView.setBackgroundColor(Color.TRANSPARENT);
+					webViewView.setBackgroundColor(Color.TRANSPARENT);
 					setZoom((int) zoom, null);
-					setLight((int) light, null);
+
+					sendFlashlightEvent(STARTED, cameraDirection, cameraId, camera);
 
 					if (callbackContext != null) {
 						callbackContext.success();
@@ -360,11 +351,12 @@ public class ezAR extends CordovaPlugin {
 		try {
 			camera.setPreviewDisplay(null);
 			camera.stopPreview();
+			sendFlashlightEvent(STOPPED,cameraDirection,cameraId,null);
 			camera.release();
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					webView.setBackgroundColor(Color.BLACK);
+					webViewView.setBackgroundColor(Color.BLACK);
 				}
 			});
 
@@ -372,7 +364,7 @@ public class ezAR extends CordovaPlugin {
 			e.printStackTrace();
 		}
 
-
+		cameraId = UNDEFINED;
 		camera = null;
 		isPreviewing = false;
 
@@ -429,9 +421,9 @@ public class ezAR extends CordovaPlugin {
 		previewSize = chooseOptimalPreviewSize(cameraParameters.getSupportedPreviewSizes(),
 				cameraView.getWidth(), cameraView.getHeight());
 
-		chooseOptimalPictureSize(cameraParameters.getSupportedPictureSizes(),0,0);
+		chooseOptimalPictureSize(cameraParameters.getSupportedPictureSizes(), 0, 0);
 
-		cameraParameters.setPreviewSize(previewSize.width,previewSize.height);
+		cameraParameters.setPreviewSize(previewSize.width, previewSize.height);
 
 		//cameraParameters.setPictureSize(previewSize.width, previewSize.height);
 		Camera.Size s = cameraParameters.getPreviewSize();
@@ -499,7 +491,7 @@ public class ezAR extends CordovaPlugin {
 	}
 
 	private void buildAndSaveSnapshotImage(byte[] takePicData, Bitmap.CompressFormat format, final CallbackContext callbackContext) {
-		final View wv = webView;
+		final View wv = webViewView;
 
 		//render video image on stopped
 		Bitmap rawVideoFrame = BitmapFactory.decodeByteArray(takePicData, 0, takePicData.length);
@@ -510,7 +502,7 @@ public class ezAR extends CordovaPlugin {
 
 		//Matrix mtx = computePictureTransform(1200,1824);
 		Matrix mtx = new Matrix();
-		mtx.setScale(1.5f,0.5f);
+		mtx.setScale(1.5f, 0.5f);
 
 
 		final Bitmap videoFrame = Bitmap.createBitmap(rawVideoFrame, 0, 0, w, h, mtx, true);
@@ -631,7 +623,7 @@ public class ezAR extends CordovaPlugin {
 
 			Log.v(TAG, "Camera facing:" + cameraInfo.facing);
 
-			if (cameraInfo.facing == cameraDir.getCameraInfoFacing()) {
+			if (cameraInfo.facing == cameraDir.getOrdinal()) {
 				cameraIdToOpen = i;
 				break;
 			}
@@ -652,7 +644,7 @@ public class ezAR extends CordovaPlugin {
 		params.setRotation(result);
 		camera.setParameters(params);
 
-		Log.i(TAG,"updateCameraDeviceOrientation: " + result);
+		Log.i(TAG, "updateCameraDeviceOrientation: " + result);
 	}
 
 	/**
@@ -804,4 +796,72 @@ public class ezAR extends CordovaPlugin {
 
 	}
 
+  //------------- used by Flashlight plugin --------------------
+  //HACK using IPC between videoOverlayPlugin and flashlight plugin
+  //TODO: refactor to use events and listener pattern
+
+	public Camera getActiveCamera() {
+		return camera;
+	}
+
+	public Camera getBackCamera() {
+		Camera camera = null;
+		if (cameraDirection == CameraDirection.BACK) {
+			camera = this.camera;
+		}
+		return camera;
+	}
+
+	public Camera getFrontCamera() {
+		Camera camera = null;
+		if (cameraDirection == CameraDirection.FRONT) {
+			camera = this.camera;
+		}
+		return camera;
+	}
+
+	//reflectively access VideoOverlay plugin to get camera in same direction as lightLoc
+	private void sendFlashlightEvent(int state, CameraDirection cameraDirection, int cameraId, Camera camera) {
+
+		CordovaPlugin flashlightPlugin = getFlashlightPlugin();
+		if (flashlightPlugin == null) {
+			return;
+		}
+
+		Method method = null;
+
+		try {
+			if (state == STARTED) {
+				method = flashlightPlugin.getClass().getMethod("videoOverlayStarted", int.class, int.class, Camera.class );
+			} else {
+				method = flashlightPlugin.getClass().getMethod("videoOverlayStopped", int.class, int.class, Camera.class );
+			}
+		} catch (SecurityException e) {
+			//e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			//e.printStackTrace();
+		}
+
+		try {
+			if (method == null) return;
+
+			method.invoke(flashlightPlugin, cameraDirection.ordinal(), cameraId, camera);
+
+		} catch (IllegalArgumentException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		} catch (IllegalAccessException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		} catch (InvocationTargetException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		}
+	}
+
+	private CordovaPlugin getFlashlightPlugin() {
+		String pluginName = "flashlight";
+		CordovaPlugin flashlightPlugin = webView.getPluginManager().getPlugin(pluginName);
+		return flashlightPlugin;
+	}
+
 }
+
+
