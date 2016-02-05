@@ -10,7 +10,6 @@
  */
 package com.ezartech.ezar.videooverlay;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,21 +24,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.media.MediaActionSound;
-import android.provider.MediaStore;
-import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -188,11 +178,6 @@ public class ezAR extends CordovaPlugin {
 			return true;
 		} else if (action.equals("setLight")) {
 			this.setLight(getIntOrNull(args, 0), callbackContext);
-
-			return true;
-		} else if (action.equals("snapshot")) {
-			//JPG: 0, PNG: 1
-			this.snapshot(getIntOrNull(args, 0), true, callbackContext);
 
 			return true;
 		}
@@ -462,109 +447,6 @@ public class ezAR extends CordovaPlugin {
 		}
 
 		return  bestSize;
-	}
-
-	private void snapshot(final int encodingType, final boolean saveToPhotoAlbum, final CallbackContext callbackContext) {
-		//JPG: 0, PNG: 1
-		Log.d(TAG, "snapshot");
-
-		//get image frame from video stream
-		camera.takePicture(
-				new Camera.ShutterCallback() {
-					@Override
-					public void onShutter() {
-						mSound.play(MediaActionSound.SHUTTER_CLICK);
-					}
-				},
-
-				null, null,
-
-				new Camera.PictureCallback() {
-					@Override
-					public void onPictureTaken(byte[] data, final Camera camera) {
-						buildAndSaveSnapshotImage(data,
-								encodingType == 0 ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG,
-								callbackContext);
-					}
-				}
-		);
-	}
-
-	private void buildAndSaveSnapshotImage(byte[] takePicData, Bitmap.CompressFormat format, final CallbackContext callbackContext) {
-		final View wv = webViewView;
-
-		//render video image on stopped
-		Bitmap rawVideoFrame = BitmapFactory.decodeByteArray(takePicData, 0, takePicData.length);
-
-		int w = rawVideoFrame.getWidth();
-		int h = rawVideoFrame.getHeight();
-		Log.i(TAG,"build snapshot,  videoframe w: " + w + "  h: " + h);
-
-		//Matrix mtx = computePictureTransform(1200,1824);
-		Matrix mtx = new Matrix();
-		mtx.setScale(1.5f, 0.5f);
-
-
-		final Bitmap videoFrame = Bitmap.createBitmap(rawVideoFrame, 0, 0, w, h, mtx, true);
-
-		wv.getRootView().post(new Runnable() {
-			@Override
-			public void run() {
-				//resume preview after it automatically stopped during takePicture()
-				camera.startPreview();
-
-				Bitmap bitmap = Bitmap.createBitmap(wv.getWidth(), wv.getHeight(), Bitmap.Config.ARGB_8888);
-				Canvas canvas = new Canvas(bitmap);
-
-				//draw preview image
-				Rect dstRect = new Rect();
-				canvas.getClipBounds(dstRect);
-				canvas.drawBitmap(videoFrame, null, dstRect, null);
-
-				Bitmap webViewBitmap = Bitmap.createBitmap(wv.getWidth(), wv.getHeight(), Bitmap.Config.ARGB_8888);
-				Canvas webViewCanvas = new Canvas(webViewBitmap);
-
-				try {
-					wv.draw(webViewCanvas);
-
-					Paint p = new Paint();
-					p.setAlpha(255);
-					p.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-					canvas.drawBitmap(webViewBitmap, null, dstRect, p);
-
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-
-				//save snapshot image to gallery
-				String title = "" + System.currentTimeMillis();
-				String url = MediaStore.Images.Media.insertImage(
-						activity.getContentResolver(),
-						bitmap,
-						title,
-						"");
-
-				Log.i(TAG, "SAVED image: " + url);
-
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-				byte[] bytes = baos.toByteArray();
-				String imageEncoded = Base64.encodeToString(bytes, Base64.DEFAULT);
-				callbackContext.success(imageEncoded);
-
-				bitmap = null;
-				canvas = null;
-				webViewBitmap = null;
-				webViewCanvas = null;
-				imageEncoded = null;
-				try {
-					baos.close();
-				} catch (Exception ex) {
-					//do nothing during clean up
-				}
-
-			}
-		}); //post
 	}
 
 
