@@ -68,7 +68,7 @@ public class ezAR extends CordovaPlugin {
 	private boolean isPreviewing = false;
 	private boolean isPaused = false;
 	private float currentZoom;
-	private float currentLight;
+
 	private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 	static {
 		ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -88,7 +88,7 @@ public class ezAR extends CordovaPlugin {
 		public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture,
 											  int width, int height) {
 			if (isPreviewing) {
-				startPreview(cameraDirection,currentZoom,currentLight,null);
+				startPreview(cameraDirection,currentZoom,null);
 			}
 		}
 
@@ -164,7 +164,6 @@ public class ezAR extends CordovaPlugin {
 			this.startPreview(
 					args.getString(0),
 					getDoubleOrNull(args, 1),
-					getDoubleOrNull(args, 2),
 					callbackContext);
 
 			return true;
@@ -174,10 +173,6 @@ public class ezAR extends CordovaPlugin {
 			return true;
 		} else if (action.equals("setZoom")) {
 			this.setZoom(getIntOrNull(args, 0), callbackContext);
-
-			return true;
-		} else if (action.equals("setLight")) {
-			this.setLight(getIntOrNull(args, 0), callbackContext);
 
 			return true;
 		}
@@ -235,11 +230,6 @@ public class ezAR extends CordovaPlugin {
 					jsonCamera.put("zoom", parameters.getZoom());
 					jsonCamera.put("maxZoom", parameters.getMaxZoom());
 
-					Log.v(TAG, "HAS LIGHT:" + (parameters.getFlashMode() == null ? false : true));
-
-					jsonCamera.put("light", parameters.getFlashMode() == null ? false : true);
-					jsonCamera.put("lightLevel", 0.);
-
 					jsonObject.put(type.toString(), jsonCamera);
 				}
 			}
@@ -252,24 +242,21 @@ public class ezAR extends CordovaPlugin {
 
 	private void startPreview(final String cameraDirName,
 							  final double zoom,
-							  final double light,
 							  final CallbackContext callbackContext) {
 
 		CameraDirection cameraDir = CameraDirection.valueOf(cameraDirName);
 
 		Log.d(TAG, "startRecording called " + cameraDir +
 				" " + zoom +
-				" " + light +
 				" " + "isShown " + cameraView.isShown() +
 				" " + cameraView.getWidth() + ", " + cameraView.getHeight());
 
-		startPreview(cameraDir, zoom, light, callbackContext);
+		startPreview(cameraDir, zoom, callbackContext);
 	}
 
 
 	private void startPreview(final CameraDirection cameraDir,
 							 final double zoom,
-							 final double light,
 							 final CallbackContext callbackContext) {
 
 		if (isPreviewing) {
@@ -355,24 +342,6 @@ public class ezAR extends CordovaPlugin {
 
 		if (callbackContext != null) {
 			callbackContext.success();
-		}
-	}
-
-	private void setLight(final int lightValue, final CallbackContext callbackContext) {
-		try {
-			Parameters parameters = camera.getParameters();
-			parameters.setFlashMode(lightValue == 1 ?
-					Parameters.FLASH_MODE_TORCH :
-					Parameters.FLASH_MODE_OFF);
-			camera.setParameters(parameters);
-			currentLight = lightValue;
-			if (callbackContext != null) {
-				callbackContext.success();
-			}
-		} catch (Throwable e) {
-			if (callbackContext != null) {
-				callbackContext.error(e.getMessage());
-			}
 		}
 	}
 
