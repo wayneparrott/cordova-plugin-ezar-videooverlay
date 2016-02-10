@@ -16,7 +16,7 @@ import android.hardware.Camera.CameraInfo;
 
 public enum CameraDirection {
 	BACK {
-		public int getCameraInfoFacing() {
+		public int getDirection() {
 			return Camera.CameraInfo.CAMERA_FACING_BACK;
 		}
 		
@@ -25,7 +25,7 @@ public enum CameraDirection {
 		}
 	},
 	FRONT {
-		public int getCameraInfoFacing() {
+		public int getDirection() {
 			return Camera.CameraInfo.CAMERA_FACING_FRONT;
 		}		
 		
@@ -35,7 +35,7 @@ public enum CameraDirection {
 	}
 	;
 
-	public abstract int getCameraInfoFacing();
+	public abstract int getDirection();
 	public abstract boolean isFlipping();
 
 	public static CameraDirection fromCameraInfo(CameraInfo info) {
