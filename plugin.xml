@@ -56,13 +56,13 @@
 	  </config-file>
 	  <config-file target="AndroidManifest.xml" parent="/*">
 			<uses-permission android:name="android.permission.CAMERA" />
-			<uses-feature android:name="android.hardware.camera" />
+			<uses-feature android:name="android.hardware.camera.any" />
 			<uses-feature android:name="android.hardware.camera.autofocus" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	  </config-file>
 	  <config-file parent="/*" target="AndroidManifest.xml" />
 	  <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/videooverlay" />
 	  <source-file src="src/android/CameraDirection.java" target-dir="src/com/ezartech/ezar/videooverlay" />
+      <source-file src="src/android/PermissionHelper.java" target-dir="src/com/ezartech/ezar/videooverlay" />
   </platform>
    
 </plugin>

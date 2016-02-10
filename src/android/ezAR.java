@@ -19,11 +19,14 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
@@ -41,6 +44,7 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.WebView;
 
+
 /**
  * This class echoes a string called from JavaScript.
  */
@@ -52,14 +56,12 @@ public class ezAR extends CordovaPlugin {
 	static final int STARTED 	= 0;
 	static final int STOPPED 	= 1;
 
-
-	static int CNT = 0;
-
+	private CallbackContext callbackContext;
 
 	private Activity activity;
 	private View webViewView;
 	private TextureView cameraView;
-	private MediaActionSound mSound;
+
 	private int displayWidth, displayHeight;
 	private Camera camera = null;
 	private int cameraId = -1;
@@ -76,6 +78,11 @@ public class ezAR extends CordovaPlugin {
 		ORIENTATIONS.append(Surface.ROTATION_180, 270);
 		ORIENTATIONS.append(Surface.ROTATION_270, 180);
 	}
+
+	protected final static String[] permissions = { Manifest.permission.CAMERA };
+	public final static int PERMISSION_DENIED_ERROR = 20;
+	public final static int CAMERA_SEC = 0;
+
 
 	/**
 	 * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
@@ -145,9 +152,6 @@ public class ezAR extends CordovaPlugin {
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
-
-				mSound = new MediaActionSound();
-				mSound.load(MediaActionSound.SHUTTER_CLICK);
 			}
 		});
 	}
@@ -181,6 +185,13 @@ public class ezAR extends CordovaPlugin {
 	}
 
 	private void init(final CallbackContext callbackContext) {
+		this.callbackContext = callbackContext;
+
+		if (! PermissionHelper.hasPermission(this, permissions[0])) {
+			PermissionHelper.requestPermission(this, CAMERA_SEC, Manifest.permission.CAMERA);
+			return;
+		}
+
 		JSONObject jsonObject = new JSONObject();
 		try {
 			Display display = activity.getWindowManager().getDefaultDisplay();
@@ -218,7 +229,7 @@ public class ezAR extends CordovaPlugin {
 
 				CameraDirection type = null;
 				for (CameraDirection f : CameraDirection.values()) {
-					if (f.getOrdinal() == cameraInfo.facing) {
+					if (f.getDirection() == cameraInfo.facing) {
 						type = f;
 					}
 				}
@@ -240,13 +251,29 @@ public class ezAR extends CordovaPlugin {
 		callbackContext.success(jsonObject);
 	}
 
+	//copied from Apache Cordova plugin
+	public void onRequestPermissionResult(int requestCode, String[] permissions,
+										  int[] grantResults) throws JSONException {
+		for(int r:grantResults) {
+			if(r == PackageManager.PERMISSION_DENIED) {
+				this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+				return;
+			}
+		}
+		switch(requestCode) {
+			case CAMERA_SEC:
+				init(this.callbackContext);
+				break;
+		}
+	}
+
 	private void startPreview(final String cameraDirName,
 							  final double zoom,
 							  final CallbackContext callbackContext) {
 
 		CameraDirection cameraDir = CameraDirection.valueOf(cameraDirName);
 
-		Log.d(TAG, "startRecording called " + cameraDir +
+		Log.d(TAG, "startPreview called " + cameraDir +
 				" " + zoom +
 				" " + "isShown " + cameraView.isShown() +
 				" " + cameraView.getWidth() + ", " + cameraView.getHeight());
@@ -381,7 +408,7 @@ public class ezAR extends CordovaPlugin {
 
 		//cameraParameters.setPictureSize(previewSize.width, previewSize.height);
 		Camera.Size s = cameraParameters.getPreviewSize();
-		Log.i(TAG,"PIC SZ W: " + s.width + "  H: " + s.height);
+		Log.i(TAG, "PIC SZ W: " + s.width + "  H: " + s.height);
 
 		camera.setParameters(cameraParameters);
 
@@ -422,43 +449,33 @@ public class ezAR extends CordovaPlugin {
 	@Override
 	public void onPause(boolean multitasking) {
 		super.onPause((multitasking));
-		onPause();
-	}
+		if (isPreviewing) {
+			int camId = cameraId;
+			CameraDirection camDir = cameraDirection;
+			stopPreview(null);
 
-	private void onPause() {
-		Log.d(TAG, "onPause called");
+			//reset state so it can be restored onResume
+			isPreviewing = true;
+			this.cameraId = camId;
+			this.cameraDirection = camDir;
+		}
 
-		camera.stopPreview();
-		camera.release();
-		camera = null;
 		isPaused = true;
-
-		Log.d(TAG, "onPause END");
 	}
+
 
 	@Override
 	public void onResume(boolean multitasking) {
 		super.onResume(multitasking);
-		onResume();
-	}
 
-	private void onResume() {
-		Log.v(TAG, "onResume");
+		if (isPreviewing) {
+			isPreviewing = false; //must set isPreviewing false before calling startPreview else NOP occurs
+			startPreview(cameraDirection,currentZoom,null);
+		}
 
 		isPaused = false;
-
-		Log.v(TAG, "onResume DONE");
 	}
 
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-
-		Log.v(TAG, "onDestroy");
-		onPause();
-		Log.v(TAG, "onDestroy DONE");
-	}
 
 	private int getCameraId(CameraDirection cameraDir) {
 
@@ -474,7 +491,7 @@ public class ezAR extends CordovaPlugin {
 
 			Log.v(TAG, "Camera facing:" + cameraInfo.facing);
 
-			if (cameraInfo.facing == cameraDir.getOrdinal()) {
+			if (cameraInfo.facing == cameraDir.getDirection()) {
 				cameraIdToOpen = i;
 				break;
 			}
