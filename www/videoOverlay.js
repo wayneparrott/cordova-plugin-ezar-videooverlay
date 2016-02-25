@@ -163,9 +163,6 @@ module.exports = (function() {
         var maxZoom = cameraData.maxZoom;
         var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom);
                   
-                  //console.log("camera: " + camera);
-                  //console.log(camera);
-                  
         return camera;
     }
                   
@@ -174,11 +171,9 @@ module.exports = (function() {
                   
         if ('FRONT' in deviceData) {
             _frontCamera = initCamera(deviceData.FRONT);
-            //console.log('front'); console.log(_frontCamera);
         }
         if ('BACK' in deviceData) {
             _backCamera = initCamera(deviceData.BACK);
-            //console.log('back'); console.log(_backCamera);
         }
     }
     
