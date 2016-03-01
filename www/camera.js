@@ -1,3 +1,4 @@
+cordova.define("com.ezartech.ezar.videooverlay.camera", function(require, exports, module) {
 /*
  * Camera.js
  * Copyright 2015, ezAR Technologies
@@ -44,13 +45,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
     _hasZoom = hasZoom;
     _maxZoom = maxZoom;
     _zoom = zoom;
-    _androidZoomScale = 0.0;
-	    
-     //normalize android zoom vals [0-99] to [1.0-normalizedMaxZoom]
-     if (_hasZoom && cordova.platformId == "android") {        
-         _maxZoom = Math.max(1.0,  (_maxZoom - 9) / 10.0);
-         _zoom = Math.max(1.0, zoom * 10.0 - 9);
-     }
+
      
     /**
      * @return {boolean} Test if this camera is currently running.
@@ -109,10 +104,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
 	 */
 	this.setZoom = function(zoom, successCallback,errorCallback) {
 	   var zooom = Math.max(1.0,zoom);
-       var normalizedZoom = zooom;
-       if (_hasZoom && cordova.platformId == "android") {
-           normalizedZoom = Math.max(0, zooom * 10.0 - 9);           
-        }
+	   zooom = Math.min(zooom, _self.getMaxZoom());
      
         if (_self.isActive() && _self.isRunning()) {
             exec(function(data) {
@@ -128,7 +120,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
                 },                 
                  "videoOverlay",
                  "setZoom",
-                 [normalizedZoom]);
+                 [zooom]);
         }
 	};
 
@@ -204,3 +196,4 @@ function isFunction(f) {
 }
 
 module.exports = Camera;
+});
