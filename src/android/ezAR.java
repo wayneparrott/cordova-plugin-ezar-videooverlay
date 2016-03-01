@@ -181,7 +181,7 @@ public class ezAR extends CordovaPlugin {
 
 	@Override
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-		Log.v(TAG, action + " " + args.length());
+		Log.d(TAG, action + " " + args.length());
 
 		if (action.equals("init")) {
 			this.init(callbackContext);
@@ -226,7 +226,7 @@ public class ezAR extends CordovaPlugin {
 			jsonObject.put("displayHeight", m.heightPixels);
 
 			int mNumberOfCameras = Camera.getNumberOfCameras();
-			Log.v(TAG, "Cameras:" + mNumberOfCameras);
+			Log.d(TAG, "Cameras:" + mNumberOfCameras);
 
 			// Find the ID of the back-facing ("default") camera
 			Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -376,8 +376,8 @@ public class ezAR extends CordovaPlugin {
 		}
 
 		try {
-			camera.setPreviewDisplay(null);
 			camera.stopPreview();
+			camera.setPreviewDisplay(null);
 			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, null);
 			camera.release();
 			cordova.getActivity().runOnUiThread(new Runnable() {
@@ -449,13 +449,13 @@ public class ezAR extends CordovaPlugin {
 				cameraView.getWidth(),
 				cameraView.getHeight());
 
-		Log.v(TAG, "preview size: " + previewSizePair.previewSize.width + ":" + previewSizePair.previewSize.height);
+		Log.d(TAG, "preview size: " + previewSizePair.previewSize.width + ":" + previewSizePair.previewSize.height);
 
 		cameraParameters.setPreviewSize(previewSizePair.previewSize.width, previewSizePair.previewSize.height);
 		Camera.Size picSize = previewSizePair.pictureSize != null ? previewSizePair.pictureSize : previewSizePair.previewSize;
 		cameraParameters.setPictureSize(picSize.width,picSize.height);
 
-		Log.v(TAG, "picture size: " + picSize.width + ":" + picSize.height);
+		Log.d(TAG, "picture size: " + picSize.width + ":" + picSize.height);
 
 		camera.setParameters(cameraParameters);
 
@@ -567,7 +567,7 @@ public class ezAR extends CordovaPlugin {
 
 		// Find number of cameras available
 		int numberOfCameras = Camera.getNumberOfCameras();
-		Log.v(TAG, "Cameras:" + numberOfCameras);
+		Log.d(TAG, "Cameras:" + numberOfCameras);
 
 		// Find ID of the back-facing ("default") camera
 		Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -575,7 +575,7 @@ public class ezAR extends CordovaPlugin {
 		for (int i = 0; i < numberOfCameras; i++) {
 			Camera.getCameraInfo(i, cameraInfo);
 
-			Log.v(TAG, "Camera facing:" + cameraInfo.facing);
+			Log.d(TAG, "Camera facing:" + cameraInfo.facing);
 
 			if (cameraInfo.facing == cameraDir.getDirection()) {
 				cameraIdToOpen = i;
@@ -663,6 +663,7 @@ public class ezAR extends CordovaPlugin {
 	 * @param desiredHeight the desired height of the camera preview frames
 	 * @return the selected preview and picture size pair
 	 */
+	//code influenced by https://github.com/googlesamples/android-vision/blob/master/visionSamples/barcode-reader/app/src/main/java/com/google/android/gms/samples/vision/barcodereader/ui/camera/CameraSource.java
 	private static SizePair selectSizePair(Camera.Size preferredVideoSize,
 										   List<android.hardware.Camera.Size> supportedPreviewSizes,
 										   List<android.hardware.Camera.Size> supportedPictureSizes,
@@ -784,9 +785,9 @@ public class ezAR extends CordovaPlugin {
 		// of the preview sizes and hope that the camera can handle it.  Probably unlikely, but we
 		// still account for it.
 		if (validPreviewSizes.size() == 0) {
-			Log.w(TAG, "No preview sizes have a corresponding same-aspect-ratio picture size");
+			Log.d(TAG, "No preview sizes have a corresponding same-aspect-ratio picture size");
 			for (Camera.Size previewSize : supportedPreviewSizes) {
-				Log.v(TAG, "PV:  " + previewSize.width + ":" + previewSize.height);
+				Log.d(TAG, "PV:  " + previewSize.width + ":" + previewSize.height);
 				// The null picture size will let us know that we shouldn't set a picture size.
 				validPreviewSizes.add(new SizePair(previewSize, null));
 			}
