@@ -1,3 +1,4 @@
+cordova.define("com.ezartech.ezar.videooverlay.videoOverlay", function(require, exports, module) {
 /**
  * videoOverlay.js
  * Copyright 2015-2016, ezAR Technologies
@@ -161,10 +162,8 @@ module.exports = (function() {
         var position = cameraData.position;
         var zoom = cameraData.zoom
         var maxZoom = cameraData.maxZoom;
-        var camera = new Camera(_ezAR,id,position,true,maxZoom,zoom);
-                  
-                  //console.log("camera: " + camera);
-                  //console.log(camera);
+        var hasZoom = maxZoom > 0;
+        var camera = new Camera(_ezAR,id,position,hasZoom,maxZoom,zoom);
                   
         return camera;
     }
@@ -174,14 +173,14 @@ module.exports = (function() {
                   
         if ('FRONT' in deviceData) {
             _frontCamera = initCamera(deviceData.FRONT);
-            //console.log('front'); console.log(_frontCamera);
         }
         if ('BACK' in deviceData) {
             _backCamera = initCamera(deviceData.BACK);
-            //console.log('back'); console.log(_backCamera);
         }
     }
     
     return _ezAR;
     
 }());
+
+});
