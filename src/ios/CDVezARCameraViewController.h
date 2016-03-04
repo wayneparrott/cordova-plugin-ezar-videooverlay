@@ -14,8 +14,6 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import "Cordova/CDV.h"
-#import "Cordova/CDVViewController.h"
-
 
 @interface CDVezARCameraViewController : UIViewController
 

@@ -3,8 +3,7 @@
  * Copyright 2015, ezAR Technologies
  * Licensed under a modified MIT license, see LICENSE or http://ezartech.com/ezarstartupkit-license
  *
- * @file Implements the ezar camera api for controlling device cameras, 
- *  zoom level and lighting. 
+ * @file Implements the ezar camera api for controlling device cameras and zoom level. 
  * @author @wayne_parrott, @vridosh, @kwparrott
  * @version 0.1.0 
  */
@@ -25,22 +24,17 @@ var exec = require('cordova/exec'),
  * @param {boolean} hasZoom  true if the camera's magnification can be changed
  * @param {float} zoom  current magnification level of the camera up 
  * 			to the maxZoom
- * @param {boolean} hasLight true when the device has a light on the
- * 			same side as the camera position; false otherwise
- * @param {integer} light  if the device has a light on the same side 
- * 			(position) as the camera then 1 turns on the device light, 
- * 			0 turns the light off
  */
-var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
+var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
 	var _ezar,
+        _self,
 	    _id,
 		_position,
 		_viewport, //not used
-		_hasLight,
-		_light,
 		_hasZoom,
 		_maxZoom,
 		_zoom,
+        _androidZoomScale;
 		//_state = Camera.State.STOPPED,
     
     _self = this;
@@ -50,9 +44,8 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
     _hasZoom = hasZoom;
     _maxZoom = maxZoom;
     _zoom = zoom;
-    _hasLight = hasLight;
-    _light = light;
-	    
+
+     
     /**
      * @return {boolean} Test if this camera is currently running.
      */
@@ -77,43 +70,6 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 	this.getPosition = function() {
 		return _position;
 	};
-	
-	/**
-	 * Identifies if the camera side of the device includes a light
-	 * @return {boolean} 
-	 */
-	this.hasLight = function() {
-		return _hasLight;
-	};
-	
-	/**
-	 * The current light setting, 0 == off, 1 == on
-	 * @return {integer} 
-	 */
-	this.getLight = function() {
-		return _light;
-	};
-	
-	/**
-	 * Turn the light on or off.
-	 * @param {integer} light 0 to turn light off, 1 to turn light on
-	 * @param {function} [successCB] function called on success
-	 * @param {function} [errorCB] function with error data parameter called on error
-	 */
-	this.setLight = function(light, successCB, errorCB) {
-		if (!_self.hasLight()) return;
-		
-		_light = light;
-		
-        if (_self.isActive() && _self.isRunning()) {
-            exec( successCB,
-                  errorCB,
-                 "ezAR",
-                 "setLight",
-                 [_light]);
-        } 
-	};
-	
 	
 	/**
 	 * Camera supports magnification.
@@ -145,15 +101,25 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
 	 * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error
 	 */
-	this.setZoom = function(zoom, successCB, errorCB) {
-		_zoom = zoom;
-
+	this.setZoom = function(zoom, successCallback,errorCallback) {
+	   var zooom = Math.max(1.0,zoom);
+	   zooom = Math.min(zooom, _self.getMaxZoom());
+     
         if (_self.isActive() && _self.isRunning()) {
-            exec(function() {console.log('success');},
-                 function(error) {console.log('error: ' + error); },
-                 "ezAR",
+            exec(function(data) {
+                   _zoom = zooom;
+                    if (isFunction(successCallback)) {
+                        successCallback(data);
+                    }
+                },
+                function(error) {
+                    if (isFunction(errorCallback)) {
+                        errorCallback(error);
+                    }
+                },                 
+                 "videoOverlay",
                  "setZoom",
-                 [_zoom]);
+                 [zooom]);
         }
 	};
 
@@ -171,16 +137,15 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
                     successCallback(data);
                 }
              },
-             function(data) {
+             function(error) {
             	 if (isFunction(errorCallback)) {
-            		 errorCallback(data);
+            		 errorCallback(error);
             	 }
              },
-             "ezAR",
+             "videoOverlay",
              "startCamera",
              [_self.getPosition(),
-              _self.hasZoom() ? _self.getZoom() : 0,
-              _self.hasLight() ? _self.getLight() : 0]);
+              _self.hasZoom() ? _self.getZoom() : 0]);
     };
     
 	/**
@@ -202,7 +167,7 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,hasLight,light) {
                     errorCallback(error);
                 }
              },
-             "ezAR",
+             "videoOverlay",
              "stopCamera",
              []);
     };
@@ -230,3 +195,4 @@ function isFunction(f) {
 }
 
 module.exports = Camera;
+

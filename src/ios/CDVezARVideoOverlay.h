@@ -1,5 +1,5 @@
 /**
- * CDVezAR.h
+ * CDVezARVideoOverlay.h
  *
  * Copyright 2015, ezAR Technologies
  * http://ezartech.com
@@ -17,7 +17,7 @@
 /**
  * Implements the ezAR Cordova api. 
  */
-@interface CDVezAR : CDVPlugin
+@interface CDVezARVideoOverlay : CDVPlugin
 
 - (void) init:(CDVInvokedUrlCommand*)command;
 
@@ -33,16 +33,17 @@
 
 - (void) stopCamera:(CDVInvokedUrlCommand*)command;
 
-- (void) maxZoom:(CDVInvokedUrlCommand*)command;
-
 - (void) getZoom:(CDVInvokedUrlCommand*)command;
 
 - (void) setZoom:(CDVInvokedUrlCommand*)command;
 
+<<<<<<< HEAD:src/ios/CDVezAR.h
 - (void) getLight:(CDVInvokedUrlCommand*)command;
 
 - (void) setLight:(CDVInvokedUrlCommand*)command;
 
+=======
+>>>>>>> dev:src/ios/CDVezARVideoOverlay.h
 - (AVCaptureSession *) getAVCaptureSession;
 
 @end
