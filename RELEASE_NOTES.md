@@ -1,17 +1,20 @@
-#ezAR Startup Kit Release Notes
+#ezAR VideoOverlay Plugin Release Notes
 
-##0.1.0 beta-2
-This update introduces snapshot support and is compatible with Cordova 4 and greater. 
-The Android implementation has been completely rewritten and fixes the preview aspect ratio issue from beta-1
+##0.2.0 (20160302-1)
+This update is refactor of the previous super ezar plugin to only include functionality  
+for setting up and controlling the camera view and the device cameras.  The Android  
+implementation has been completely rewritten and fixes preview aspect ratio issue  
+from beta-1.  
 
-Issues
-1. Android snapshot aspect ratio is a working progress, i.e., dorked.
-2. Plugin error reporting still needs improvement.
+This plugin works with or without the Flashlight and Snapshot plugins.
+
+###Known Issues
+1. Plugin error reporting needs improvement.
 
 
 ##0.1.0 beta-1
 This is the first public release of the ezAR Startup Kit.
 
-Issues
+##Known Issues
 1. Camera view does not consistently maintain aspect ratio on device rotation
 2. Plugin error reporting needs improvement.
