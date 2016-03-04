@@ -1,4 +1,3 @@
-cordova.define("com.ezartech.ezar.videooverlay.camera", function(require, exports, module) {
 /*
  * Camera.js
  * Copyright 2015, ezAR Technologies
@@ -196,4 +195,4 @@ function isFunction(f) {
 }
 
 module.exports = Camera;
-});
+
