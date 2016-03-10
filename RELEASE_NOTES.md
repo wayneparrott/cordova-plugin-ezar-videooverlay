@@ -1,5 +1,10 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.1 (20160302-1)
+Minor changes:
+1. Fixed plugin name in plugin.xml
+
+
 ##0.2.0 (20160302-1)
 This update is refactor of the previous super ezar plugin to only include functionality  
 for setting up and controlling the camera view and the device cameras.  The Android  
