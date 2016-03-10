@@ -39,6 +39,8 @@
 
 - (AVCaptureSession *) getAVCaptureSession;
 
+- (AVCaptureStillImageOutput *) getAVCaptureStillImageOutput;
+
 @end
 
 typedef NS_ENUM(NSUInteger, EZAR_ERROR_CODE) {
