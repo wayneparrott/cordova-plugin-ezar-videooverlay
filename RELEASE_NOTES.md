@@ -1,5 +1,10 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.2 (20160310)
+Changes:
+1. Fixed video orientation to rotate consistently on device rotation.
+
+
 ##0.2.1 (20160302-1)
 Minor changes:
 1. Fixed plugin name in plugin.xml
