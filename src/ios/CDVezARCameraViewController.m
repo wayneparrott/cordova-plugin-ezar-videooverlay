@@ -120,11 +120,21 @@
 {
     AVCaptureVideoOrientation videoOrient = [self videoOrientationFromUIInterfaceOrientation: interfaceOrientation];
     
-    BOOL shouldRotate = [_mainController shouldAutorotateToInterfaceOrientation: interfaceOrientation];
-   
+    //shouldAutorotateToInterfaceOrientation is incorrectly returning NO 
+    //As a result replacing with custom orientation support check
+    //BOOL shouldRotate = [_mainController shouldAutorotateToInterfaceOrientation: interfaceOrientation];
+    BOOL shouldRotate = orientationMaskSupportsOrientation(
+                                [_mainController supportedInterfaceOrientations],
+                                interfaceOrientation);
+    
     if (shouldRotate && videoOrient != _previewLayer.connection.videoOrientation) {
         _previewLayer.connection.videoOrientation = videoOrient;
     }
+}
+                                                            
+BOOL orientationMaskSupportsOrientation(UIInterfaceOrientationMask mask, UIInterfaceOrientation orientation)
+{
+    return (mask & (1 << orientation)) != 0;
 }
 
 - (UIInterfaceOrientation)getUIInterfaceOrientation
