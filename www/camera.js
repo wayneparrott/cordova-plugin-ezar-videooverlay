@@ -27,12 +27,14 @@ var exec = require('cordova/exec'),
  */
 var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
 	var _ezar,
+        _self,
 	    _id,
 		_position,
 		_viewport, //not used
 		_hasZoom,
 		_maxZoom,
 		_zoom,
+        _androidZoomScale;
 		//_state = Camera.State.STOPPED,
     
     _self = this;
@@ -42,7 +44,8 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
     _hasZoom = hasZoom;
     _maxZoom = maxZoom;
     _zoom = zoom;
-	    
+
+     
     /**
      * @return {boolean} Test if this camera is currently running.
      */
@@ -98,15 +101,25 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
 	 * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error
 	 */
-	this.setZoom = function(zoom, successCB, errorCB) {
-		_zoom = zoom;
-
+	this.setZoom = function(zoom, successCallback,errorCallback) {
+	   var zooom = Math.max(1.0,zoom);
+	   zooom = Math.min(zooom, _self.getMaxZoom());
+     
         if (_self.isActive() && _self.isRunning()) {
-            exec(function() {console.log('success');},
-                 function(error) {console.log('error: ' + error); },
+            exec(function(data) {
+                   _zoom = zooom;
+                    if (isFunction(successCallback)) {
+                        successCallback(data);
+                    }
+                },
+                function(error) {
+                    if (isFunction(errorCallback)) {
+                        errorCallback(error);
+                    }
+                },                 
                  "videoOverlay",
                  "setZoom",
-                 [_zoom]);
+                 [zooom]);
         }
 	};
 
@@ -124,9 +137,9 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
                     successCallback(data);
                 }
              },
-             function(data) {
+             function(error) {
             	 if (isFunction(errorCallback)) {
-            		 errorCallback(data);
+            		 errorCallback(error);
             	 }
              },
              "videoOverlay",
@@ -182,3 +195,4 @@ function isFunction(f) {
 }
 
 module.exports = Camera;
+
