@@ -24,7 +24,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
     AVCaptureSession *captureSession;
     AVCaptureDevice  *backVideoDevice, *frontVideoDevice, *videoDevice;
     AVCaptureDeviceInput *backVideoDeviceInput, *frontVideoDeviceInput, *videoDeviceInput;
-    //AVCaptureStillImageOutput *stillImageOutput;
+    AVCaptureStillImageOutput *stillImageOutput;
     UIColor *bgColor;
 }
 
@@ -245,6 +245,11 @@ NSInteger const EZAR_VIEW_TAG = 999;
     return captureSession;
 }
 
+- (AVCaptureStillImageOutput *) getAVCaptureStillImageOutput
+{
+    return stillImageOutput;
+}
+
 
 //---------------------------------------------------------------
 //
@@ -350,10 +355,11 @@ NSInteger const EZAR_VIEW_TAG = 999;
         }
         
         //configure to capture a video frame
-        //stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-        //NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
-        //[stillImageOutput setOutputSettings:outputSettings];
-        //[captureSession addOutput: stillImageOutput];
+        stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+        NSDictionary *outputSettings =
+            [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+        [stillImageOutput setOutputSettings:outputSettings];
+        [captureSession addOutput: stillImageOutput];
         
         
     } else
@@ -376,8 +382,10 @@ NSInteger const EZAR_VIEW_TAG = 999;
     [self basicStopCamera];
     
     [captureSession removeInput: videoDeviceInput];
+    [captureSession removeOutput:stillImageOutput];
     videoDevice = nil;
     videoDeviceInput = nil;
+    stillImageOutput = nil;
     
 }
 
