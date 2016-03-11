@@ -29,6 +29,10 @@
 
 - (BOOL) isCameraRunning;
 
+- (BOOL) isBackCameraRunning;
+
+- (BOOL) isFrontCameraRunning;
+
 - (void) startCamera:(CDVInvokedUrlCommand*)command;
 
 - (void) stopCamera:(CDVInvokedUrlCommand*)command;
