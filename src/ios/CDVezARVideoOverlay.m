@@ -151,6 +151,16 @@ NSInteger const EZAR_VIEW_TAG = 999;
     return self.getAVCaptureSession && [self.getAVCaptureSession isRunning];
 }
 
+- (BOOL) isFrontCameraRunning
+{
+    return [self isCameraRunning] && videoDevice && videoDevice == frontVideoDevice;
+}
+
+- (BOOL) isBackCameraRunning
+{
+    return [self isCameraRunning] && videoDevice && videoDevice == backVideoDevice;
+}
+
 
 //
 //
