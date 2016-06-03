@@ -41,6 +41,8 @@
 
 - (void) setZoom:(CDVInvokedUrlCommand*)command;
 
+- (UIImageView *) getCameraView;
+
 - (AVCaptureSession *) getAVCaptureSession;
 
 - (AVCaptureStillImageOutput *) getAVCaptureStillImageOutput;
