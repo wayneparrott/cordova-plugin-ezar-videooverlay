@@ -85,9 +85,12 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
                     session: captureSession];
     camController.view;
     camController.view.tag = EZAR_CAMERA_VIEW_TAG;
+    camController.view.backgroundColor = bgColor;
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
+    self.webView.backgroundColor = [UIColor clearColor];
+   
     [self forceWebViewRedraw];
     
     //ACCESS DEVICE INFO: CAMERAS, ...
@@ -183,8 +186,7 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
         
     }
 
-    //SET WEBVIEW TRANSPARENT BACKGROUND
-    self.webView.backgroundColor = [UIColor clearColor];
+    //SET WEBVIEW BACKGROUND is already transparent
    
     
     //START THE CAPTURE SESSION
@@ -416,7 +418,6 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     if ([self isCameraRunning]) {
         //----- STOP THE CAPTURE SESSION RUNNING -----
         [captureSession stopRunning];
-        self.webView.backgroundColor = bgColor;
     }
 }
 
