@@ -5,9 +5,9 @@
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
 	  xmlns:android="http://schemas.android.com/apk/res/android"
 	  id="com.ezartech.ezar.videooverlay"
-	  version="0.1.3">
+	  version="0.2.4">
 	  
-	<name>ezAR Startup Kit</name>
+	<name>ezAR Video Overlay</name>
 	<description>Augmented reality SDK for Cordova hybrid-mobile applications. 
 				 Overlay a real-world background mobile device camera with
 				 a transparent application web (HTML) UI that has full access

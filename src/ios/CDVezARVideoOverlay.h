@@ -29,6 +29,10 @@
 
 - (BOOL) isCameraRunning;
 
+- (BOOL) isBackCameraRunning;
+
+- (BOOL) isFrontCameraRunning;
+
 - (void) startCamera:(CDVInvokedUrlCommand*)command;
 
 - (void) stopCamera:(CDVInvokedUrlCommand*)command;
@@ -37,7 +41,11 @@
 
 - (void) setZoom:(CDVInvokedUrlCommand*)command;
 
+- (UIImageView *) getCameraView;
+
 - (AVCaptureSession *) getAVCaptureSession;
+
+- (AVCaptureStillImageOutput *) getAVCaptureStillImageOutput;
 
 @end
 

@@ -16,7 +16,7 @@
 #import "MainViewController.h"
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
-NSInteger const EZAR_VIEW_TAG = 999;
+NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
 
 @implementation CDVezARVideoOverlay
 {
@@ -24,7 +24,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
     AVCaptureSession *captureSession;
     AVCaptureDevice  *backVideoDevice, *frontVideoDevice, *videoDevice;
     AVCaptureDeviceInput *backVideoDeviceInput, *frontVideoDeviceInput, *videoDeviceInput;
-    //AVCaptureStillImageOutput *stillImageOutput;
+    AVCaptureStillImageOutput *stillImageOutput;
     UIColor *bgColor;
 }
 
@@ -41,8 +41,10 @@ NSInteger const EZAR_VIEW_TAG = 999;
 // 
 - (void)init:(CDVInvokedUrlCommand*)command
 {
-    //cache original webview background color for restoring later
-    bgColor = self.webView.backgroundColor;
+    //set webview background color for restoring later, default is WHITE
+    NSString* cameraViewBackgroundRGB = [command argumentAtIndex:0 withDefault:@"FFFFFF"];
+    bgColor = [self colorFromHexString: cameraViewBackgroundRGB];
+    
     
     //set main view background to black; otherwise white area appears during rotation
     self.viewController.view.backgroundColor = [UIColor blackColor];
@@ -82,10 +84,13 @@ NSInteger const EZAR_VIEW_TAG = 999;
                     initWithController: (CDVViewController*)self.viewController
                     session: captureSession];
     camController.view;
-    camController.view.tag = EZAR_VIEW_TAG;
+    camController.view.tag = EZAR_CAMERA_VIEW_TAG;
+    camController.view.backgroundColor = bgColor;
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
+    self.webView.backgroundColor = [UIColor clearColor];
+   
     [self forceWebViewRedraw];
     
     //ACCESS DEVICE INFO: CAMERAS, ...
@@ -151,6 +156,16 @@ NSInteger const EZAR_VIEW_TAG = 999;
     return self.getAVCaptureSession && [self.getAVCaptureSession isRunning];
 }
 
+- (BOOL) isFrontCameraRunning
+{
+    return [self isCameraRunning] && videoDevice && videoDevice == frontVideoDevice;
+}
+
+- (BOOL) isBackCameraRunning
+{
+    return [self isCameraRunning] && videoDevice && videoDevice == backVideoDevice;
+}
+
 
 //
 //
@@ -171,8 +186,7 @@ NSInteger const EZAR_VIEW_TAG = 999;
         
     }
 
-    //SET WEBVIEW TRANSPARENT BACKGROUND
-    self.webView.backgroundColor = [UIColor clearColor];
+    //SET WEBVIEW BACKGROUND is already transparent
    
     
     //START THE CAPTURE SESSION
@@ -239,10 +253,21 @@ NSInteger const EZAR_VIEW_TAG = 999;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
  
+- (UIImageView *) getCameraView
+{
+    //UIImageView* cameraView = camController.view;
+    UIImageView* cameraView = (UIImageView *)[self.viewController.view viewWithTag: EZAR_CAMERA_VIEW_TAG];
+    return cameraView;
+}
 
 - (AVCaptureSession *) getAVCaptureSession
 {
     return captureSession;
+}
+
+- (AVCaptureStillImageOutput *) getAVCaptureStillImageOutput
+{
+    return stillImageOutput;
 }
 
 
@@ -350,10 +375,11 @@ NSInteger const EZAR_VIEW_TAG = 999;
         }
         
         //configure to capture a video frame
-        //stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-        //NSDictionary *outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
-        //[stillImageOutput setOutputSettings:outputSettings];
-        //[captureSession addOutput: stillImageOutput];
+        stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+        NSDictionary *outputSettings =
+            [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+        [stillImageOutput setOutputSettings:outputSettings];
+        [captureSession addOutput: stillImageOutput];
         
         
     } else
@@ -376,8 +402,10 @@ NSInteger const EZAR_VIEW_TAG = 999;
     [self basicStopCamera];
     
     [captureSession removeInput: videoDeviceInput];
+    [captureSession removeOutput:stillImageOutput];
     videoDevice = nil;
     videoDeviceInput = nil;
+    stillImageOutput = nil;
     
 }
 
@@ -390,7 +418,6 @@ NSInteger const EZAR_VIEW_TAG = 999;
     if ([self isCameraRunning]) {
         //----- STOP THE CAPTURE SESSION RUNNING -----
         [captureSession stopRunning];
-        self.webView.backgroundColor = bgColor;
     }
 }
 
@@ -449,6 +476,15 @@ NSInteger const EZAR_VIEW_TAG = 999;
 	[(UIWebView*)self.webView stringByEvaluatingJavaScriptFromString: jsstring];
 }
 
+
+// Assumes input like RRGGBB, do not prefix with #
+- (UIColor *)colorFromHexString:(NSString *)hexString {
+    unsigned rgbValue = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hexString];
+    //[scanner setScanLocation:1]; // bypass '#' character
+    [scanner scanHexInt:&rgbValue];
+    return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
+}
 
 
 @end

@@ -1,4 +1,3 @@
-cordova.define("com.ezartech.ezar.videooverlay.videoOverlay", function(require, exports, module) {
 /**
  * videoOverlay.js
  * Copyright 2015-2016, ezAR Technologies
@@ -36,8 +35,21 @@ module.exports = (function() {
      * Initialize ezAR internal state, cameras and zoom features.
      * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error
+     * @param {options} {
+     *        backgroundColor: 'RRGGBB' = 'FFFFFF'
+     *     }
      */
-    _ezAR.initializeVideoOverlay = function(successCallback,errorCallback) {
+    _ezAR.initializeVideoOverlay = function(successCallback,errorCallback,options) {
+                  
+        options = options || {};
+        var backgroundColorRGB =
+                  (options.backgroundColor === undefined ||
+                   typeof options.backgroundColor != 'string' ||
+                   !(/^#?[0-9A-F]{6}$/i.test(options.backgroundColor))) ?
+                  '000000' :
+                  options.backgroundColor;
+        backgroundColorRGB = backgroundColorRGB.replace('#','');
+                  
         //execute successCallback immediately if already initialized
     	if (_ezAR.isVideoOverlayInitialized()) {
            if (isFunction(successCallback)) successCallback();
@@ -63,7 +75,7 @@ module.exports = (function() {
              _onError,
             "videoOverlay",
             "init",
-            []);
+            [backgroundColorRGB]);
     }
     
     /**
@@ -183,4 +195,3 @@ module.exports = (function() {
     
 }());
 
-});
