@@ -42,7 +42,7 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
 - (void)init:(CDVInvokedUrlCommand*)command
 {
     //set webview background color for restoring later, default is WHITE
-    NSString* cameraViewBackgroundRGB = [command argumentAtIndex:0 withDefault:@"FFFFFF"];
+    NSString* cameraViewBackgroundRGB = [command argumentAtIndex:0 withDefault:@"#FFFFFF"];
     bgColor = [self colorFromHexString: cameraViewBackgroundRGB];
     
     
@@ -477,11 +477,11 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
 }
 
 
-// Assumes input like RRGGBB, do not prefix with #
+// Assumes input like #RRGGBB
 - (UIColor *)colorFromHexString:(NSString *)hexString {
     unsigned rgbValue = 0;
     NSScanner *scanner = [NSScanner scannerWithString:hexString];
-    //[scanner setScanLocation:1]; // bypass '#' character
+    [scanner setScanLocation:1]; // bypass '#' character
     [scanner scanHexInt:&rgbValue];
     return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
 }
