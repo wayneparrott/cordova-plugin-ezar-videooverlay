@@ -68,6 +68,7 @@ public class ezAR extends CordovaPlugin {
 	private Camera camera = null;
 	private int cameraId = -1;
 	private CameraDirection cameraDirection;
+	private int displayOrientation;
 	private SizePair previewSizePair = null;
 	private double currentZoom;
 	private boolean isPreviewing = false;
@@ -452,10 +453,11 @@ public class ezAR extends CordovaPlugin {
 		Log.d(TAG, "preview size: " + previewSizePair.previewSize.width + ":" + previewSizePair.previewSize.height);
 
 		cameraParameters.setPreviewSize(previewSizePair.previewSize.width, previewSizePair.previewSize.height);
-		Camera.Size picSize = previewSizePair.pictureSize != null ? previewSizePair.pictureSize : previewSizePair.previewSize;
-		cameraParameters.setPictureSize(picSize.width,picSize.height);
-
-		Log.d(TAG, "picture size: " + picSize.width + ":" + picSize.height);
+		
+		//commenting out; not used now
+		//Camera.Size picSize = previewSizePair.pictureSize != null ? previewSizePair.pictureSize : previewSizePair.previewSize;
+		//cameraParameters.setPictureSize(picSize.width,picSize.height);
+		//Log.d(TAG, "picture size: " + picSize.width + ":" + picSize.height);
 
 		camera.setParameters(cameraParameters);
 
@@ -592,8 +594,8 @@ public class ezAR extends CordovaPlugin {
 
 
 	public void updateCameraDisplayOrientation() {
-		int result = getRoatationAngle(cameraId);
-		camera.setDisplayOrientation(result);
+		displayOrientation = getRoatationAngle(cameraId);
+		camera.setDisplayOrientation(displayOrientation);
 
 //moved to snapshot plugin
 //		Camera.Parameters params = camera.getParameters();
@@ -604,7 +606,7 @@ public class ezAR extends CordovaPlugin {
 //		params.setRotation(result % 360);
 //		camera.setParameters(params);
 
-		Log.i(TAG, "updateCameraDeviceOrientation: " + result);
+		Log.i(TAG, "updateCameraDeviceOrientation: " + displayOrientation);
 	}
 
 	/**
@@ -870,6 +872,14 @@ public class ezAR extends CordovaPlugin {
 		return camera;
 	}
 
+	public CameraDirection getActiveCameraDirection() {
+		return cameraDirection;
+	}
+
+	public Integer getDisplayOrientation() {
+		return displayOrientation;
+	}
+
 	public TextureView getCameraView() {
 		return cameraView;
 	}
@@ -910,14 +920,11 @@ public class ezAR extends CordovaPlugin {
 		}
 	}
 
-//	public Float getPictureScale() {
-//
-//		if (previewSizePair.pictureSize == null) return Float.MAX_VALUE;
-//
-//		float scale = previewSizePair.pictureSize.width / previewSizePair.previewSize.width;
-//
-//		return Float.valueOf(scale);
-//	}
+
+	private CordovaPlugin getPlugin(String pluginName) {
+		CordovaPlugin plugin = webView.getPluginManager().getPlugin(pluginName);
+		return plugin;
+	}
 
 	private CordovaPlugin getFlashlightPlugin() {
 		String pluginName = "flashlight";
@@ -929,10 +936,4 @@ public class ezAR extends CordovaPlugin {
 		return getPlugin(pluginName);
 	}
 
-	private CordovaPlugin getPlugin(String pluginName) {
-		CordovaPlugin plugin = webView.getPluginManager().getPlugin(pluginName);
-		return plugin;
-	}
 }
-
-

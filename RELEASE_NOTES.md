@@ -1,5 +1,9 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.3 (20160503)
+Changes:
+1. Fixed render error on Galaxy S4. Removed unused setting of android picture size.
+
 ##0.2.2 (20160310)
 Changes:
 1. Fixed video orientation to rotate consistently on device rotation.
