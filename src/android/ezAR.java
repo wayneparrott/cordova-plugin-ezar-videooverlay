@@ -65,6 +65,9 @@ public class ezAR extends CordovaPlugin {
 	private View webViewView;
 	private TextureView cameraView;
 
+	static final String DEFAULT_RGB = "#FFFFFF";
+	private int bgColor = Color.BLACK;
+
 	private Camera camera = null;
 	private int cameraId = -1;
 	private CameraDirection cameraDirection;
@@ -79,6 +82,7 @@ public class ezAR extends CordovaPlugin {
 	protected final static String[] permissions = {Manifest.permission.CAMERA};
 	public final static int PERMISSION_DENIED_ERROR = 20;
 	public final static int CAMERA_SEC = 0;
+
 
 	private View.OnLayoutChangeListener layoutChangeListener =
 			new View.OnLayoutChangeListener() {
@@ -124,6 +128,8 @@ public class ezAR extends CordovaPlugin {
 
 				@Override
 				public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+					//Log.v(TAG,"SURFACE TEXTURE CHANGE");
+
 				}
 
 			};
@@ -144,13 +150,11 @@ public class ezAR extends CordovaPlugin {
 				//configure webview
 				webViewView.setKeepScreenOn(true);
 				webViewView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
-				webViewView.setBackgroundColor(Color.BLACK);
 
 				//temporarily remove webview from view stack
 				((ViewGroup) webViewView.getParent()).removeView(webViewView);
 
 				cordovaViewContainer = new FrameLayout(activity);
-				cordovaViewContainer.setBackgroundColor(Color.BLACK);
 				activity.setContentView(cordovaViewContainer,
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
@@ -159,7 +163,6 @@ public class ezAR extends CordovaPlugin {
 				//create & add videoOverlay to view stack
 
 				cameraView = new TextureView(activity);
-				cameraView.setBackgroundColor(Color.BLACK);
 				cameraView.setSurfaceTextureListener(mSurfaceTextureListener);
 				cordovaViewContainer.addView(cameraView,
 						new ViewGroup.LayoutParams(
@@ -173,7 +176,6 @@ public class ezAR extends CordovaPlugin {
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
 
-				((FrameLayout)cordovaViewContainer.getParent()).setBackgroundColor(Color.BLACK);
 				((FrameLayout)cordovaViewContainer.getParent()).addOnLayoutChangeListener(layoutChangeListener);
 			}
 		});
@@ -185,7 +187,7 @@ public class ezAR extends CordovaPlugin {
 		Log.d(TAG, action + " " + args.length());
 
 		if (action.equals("init")) {
-			this.init(callbackContext);
+			this.init(args, callbackContext);
 			return true;
 		} else if (action.equals("startCamera")) {
 			this.startPreview(
@@ -207,10 +209,29 @@ public class ezAR extends CordovaPlugin {
 		return false;
 	}
 
-	private void init(final CallbackContext callbackContext) {
+	private void init(JSONArray args, final CallbackContext callbackContext) {
 		this.callbackContext = callbackContext;
 
 		supportSnapshot = getSnapshotPlugin() != null;
+
+		if (args != null) {
+			String rgb = DEFAULT_RGB;
+			try {
+				rgb = args.getString(0);
+			} catch (JSONException e) {
+				//do nothing; resort to DEFAULT_RGB
+			}
+
+			bgColor = Color.parseColor(rgb);
+			cordova.getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					webViewView.setBackgroundColor(bgColor);
+					cordovaViewContainer.setBackgroundColor(bgColor);
+					((FrameLayout)cordovaViewContainer.getParent()).setBackgroundColor(bgColor);
+				}
+			});
+		}
 
 		if (!PermissionHelper.hasPermission(this, permissions[0])) {
 			PermissionHelper.requestPermission(this, CAMERA_SEC, Manifest.permission.CAMERA);
@@ -288,7 +309,7 @@ public class ezAR extends CordovaPlugin {
 		}
 		switch (requestCode) {
 			case CAMERA_SEC:
-				init(this.callbackContext);
+				init(null,this.callbackContext);
 				break;
 		}
 	}
@@ -345,9 +366,9 @@ public class ezAR extends CordovaPlugin {
 
 					//configure scaled CVG size & preview matrix
 					updateCordovaViewContainerSize();
-
 					camera.startPreview();
 					webViewView.setBackgroundColor(Color.TRANSPARENT);
+
 					setZoom(zoom, null);
 
 					sendFlashlightEvent(STARTED, cameraDirection, cameraId, camera);
@@ -384,7 +405,7 @@ public class ezAR extends CordovaPlugin {
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					webViewView.setBackgroundColor(Color.BLACK);
+					webViewView.setBackgroundColor(bgColor);
 					resetCordovaViewContainerSize();
 				}
 			});
