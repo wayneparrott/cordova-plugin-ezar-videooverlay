@@ -66,7 +66,7 @@ public class ezAR extends CordovaPlugin {
 	private TextureView cameraView;
 
 	static final String DEFAULT_RGB = "#FFFFFF";
-	private int bgColor = Color.BLACK;
+	private int bgColor = Color.WHITE;;
 
 	private Camera camera = null;
 	private int cameraId = -1;
@@ -155,6 +155,7 @@ public class ezAR extends CordovaPlugin {
 				((ViewGroup) webViewView.getParent()).removeView(webViewView);
 
 				cordovaViewContainer = new FrameLayout(activity);
+				cordovaViewContainer.setBackgroundColor(Color.BLACK);
 				activity.setContentView(cordovaViewContainer,
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
@@ -177,6 +178,7 @@ public class ezAR extends CordovaPlugin {
 								LayoutParams.MATCH_PARENT));
 
 				((FrameLayout)cordovaViewContainer.getParent()).addOnLayoutChangeListener(layoutChangeListener);
+				((FrameLayout)cordovaViewContainer.getParent()).setBackgroundColor(Color.BLACK);
 			}
 		});
 	}
@@ -222,13 +224,11 @@ public class ezAR extends CordovaPlugin {
 				//do nothing; resort to DEFAULT_RGB
 			}
 
-			bgColor = Color.parseColor(rgb);
+			setBackgroundColor(Color.parseColor(rgb));
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					webViewView.setBackgroundColor(bgColor);
-					cordovaViewContainer.setBackgroundColor(bgColor);
-					((FrameLayout)cordovaViewContainer.getParent()).setBackgroundColor(bgColor);
+					webViewView.setBackgroundColor(getBackgroundColor());
 				}
 			});
 		}
@@ -398,17 +398,18 @@ public class ezAR extends CordovaPlugin {
 		}
 
 		try {
-			camera.stopPreview();
-			camera.setPreviewDisplay(null);
-			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, null);
-			camera.release();
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					webViewView.setBackgroundColor(bgColor);
+					webViewView.setBackgroundColor(getBackgroundColor());
 					resetCordovaViewContainerSize();
 				}
 			});
+
+			camera.stopPreview();
+			camera.setPreviewDisplay(null);
+			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, null);
+			camera.release();			
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -421,6 +422,14 @@ public class ezAR extends CordovaPlugin {
 		if (callbackContext != null) {
 			callbackContext.success();
 		}
+	}
+
+	public int getBackgroundColor() {
+		return bgColor;
+	}
+
+	private void setBackgroundColor(int color) {
+		this.bgColor = color;
 	}
 
 	private void setZoom(final double newZoom, final CallbackContext callbackContext) {
