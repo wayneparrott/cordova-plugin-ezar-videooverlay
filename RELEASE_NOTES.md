@@ -1,5 +1,11 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.4 (20160606)
+Changes:
+1. Added backgroundColor (#RRGGBB) property to initializeVideoOverlay options parameter. 
+Set the background color visible when a camera is not running. This background color is 
+visible only when the HTML <body> background color is transperent.
+
 ##0.2.3 (20160503)
 Changes:
 1. Fixed render error on Galaxy S4. Removed unused setting of android picture size.
