@@ -42,8 +42,8 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
 - (void)init:(CDVInvokedUrlCommand*)command
 {
     //set webview background color for restoring later, default is WHITE
-    NSString* cameraViewBackgroundRGB = [command argumentAtIndex:0 withDefault:@"#FFFFFF"];
-    bgColor = [self colorFromHexString: cameraViewBackgroundRGB];
+    NSString *bgColorRGB = [command argumentAtIndex:0 withDefault:@"#FFFFFF"];
+    bgColor = [self colorFromHexString: bgColorRGB];
     
     
     //set main view background to black; otherwise white area appears during rotation
@@ -85,11 +85,12 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
                     session: captureSession];
     camController.view;
     camController.view.tag = EZAR_CAMERA_VIEW_TAG;
-    camController.view.backgroundColor = bgColor;
+     //set main view background to black; otherwise white area appears during rotation
+    self.viewController.view.backgroundColor = [UIColor blackColor];
     
     //MAKE WEBVIEW TRANSPARENT
     self.webView.opaque = NO;
-    self.webView.backgroundColor = [UIColor clearColor];
+    self.webView.backgroundColor = [self getBackgroundColor];
    
     [self forceWebViewRedraw];
     
@@ -102,6 +103,14 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+//
+// Return device Camera details
+//
+- (UIColor *)getBackgroundColor
+{
+    if (!bgColor) bgColor = [UIColor whiteColor];
+    return bgColor;
+}
 
 //
 // Return device Camera details
@@ -186,8 +195,8 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
         
     }
 
-    //SET WEBVIEW BACKGROUND is already transparent
-   
+    //SET WEBVIEW BACKGROUND transparent
+    self.webView.backgroundColor = [UIColor clearColor];
     
     //START THE CAPTURE SESSION
     [captureSession startRunning];
@@ -416,6 +425,8 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
 - (void)basicStopCamera
 {
     if ([self isCameraRunning]) {
+        self.webView.backgroundColor = [self getBackgroundColor];
+        
         //----- STOP THE CAPTURE SESSION RUNNING -----
         [captureSession stopRunning];
     }
