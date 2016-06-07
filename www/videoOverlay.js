@@ -36,7 +36,7 @@ module.exports = (function() {
      * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error
      * @param {options} {
-     *        backgroundColor: 'RRGGBB' = 'FFFFFF'
+     *        backgroundColor: '#RRGGBB' = '#FFFFFF'
      *     }
      */
     _ezAR.initializeVideoOverlay = function(successCallback,errorCallback,options) {
@@ -46,9 +46,12 @@ module.exports = (function() {
                   (options.backgroundColor === undefined ||
                    typeof options.backgroundColor != 'string' ||
                    !(/^#?[0-9A-F]{6}$/i.test(options.backgroundColor))) ?
-                  '000000' :
+                  '#000000' :
                   options.backgroundColor;
-        backgroundColorRGB = backgroundColorRGB.replace('#','');
+        backgroundColorRGB =
+            backgroundColorRGB.startsWith('#') ?
+                backgroundColorRGB :
+                '#' + backgroundColorRGB;
                   
         //execute successCallback immediately if already initialized
     	if (_ezAR.isVideoOverlayInitialized()) {
