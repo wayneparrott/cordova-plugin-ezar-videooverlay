@@ -21,6 +21,8 @@
 
 - (void) init:(CDVInvokedUrlCommand*)command;
 
+- (UIColor *) getBackgroundColor;
+
 - (void) getCameras:(CDVInvokedUrlCommand*)command;
 
 - (void) activateCamera:(CDVInvokedUrlCommand*)command;
