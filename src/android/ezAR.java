@@ -83,6 +83,7 @@ public class ezAR extends CordovaPlugin {
 	public final static int PERMISSION_DENIED_ERROR = 20;
 	public final static int CAMERA_SEC = 0;
 
+	boolean surfaceDestroyed = true;
 
 	private View.OnLayoutChangeListener layoutChangeListener =
 			new View.OnLayoutChangeListener() {
@@ -94,7 +95,7 @@ public class ezAR extends CordovaPlugin {
 						return;
 					}
 
-					if (isPreviewing) {
+					if (isPreviewing()) {
 						updateCordovaViewContainerSize();
 					}
 				}
@@ -110,26 +111,31 @@ public class ezAR extends CordovaPlugin {
 				@Override
 				public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture,
 													  int width, int height) {
-					if (isPreviewing) { //only called from onResume
-						isPreviewing = false; //must set isPreviewing false before calling startPreview else NOP occurs
-						startPreview(cameraDirection, currentZoom, null);
+					Log.d(TAG,"onSurfaceTextureAvail, isPreviewing: " + isPreviewing());
+					surfaceDestroyed = false;
+
+					if (isPreviewing()) { //only called from onResume
+						forcePreviewRestart();
 					}
 				}
 
 				@Override
 				public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture,
 														int width, int height) {
+					Log.v(TAG,"SURFACE TEXTURE size changed");
+
 				}
 
 				@Override
 				public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+					//Log.v(TAG,"SURFACE TEXTURE DESTROYED");
+					surfaceDestroyed = true;
 					return true;
 				}
 
 				@Override
 				public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-					//Log.v(TAG,"SURFACE TEXTURE CHANGE");
-
+					//Log.v(TAG,"SURFACE TEXTURE ");
 				}
 
 			};
@@ -314,6 +320,11 @@ public class ezAR extends CordovaPlugin {
 		}
 	}
 
+	public synchronized void forcePreviewRestart() {
+		setIsPreviewing(false); //must set isPreviewing false before calling startPreview else NOP occurs
+		startPreview(cameraDirection, currentZoom, null);
+	}
+
 	private void startPreview(final String cameraDirName,
 							  final double zoom,
 							  final CallbackContext callbackContext) {
@@ -333,13 +344,15 @@ public class ezAR extends CordovaPlugin {
 							  final double zoom,
 							  final CallbackContext callbackContext) {
 
+		Log.d(TAG,"start Preview");
+
 		if (activity == null || activity.isFinishing()) {
 			return;
 		}
 
-		if (isPreviewing) {
+		if (isPreviewing()) {
 			if (cameraId != getCameraId(cameraDir)) {
-				stopPreview(null);
+				stopPreview(null,false);
 			}
 		}
 
@@ -361,7 +374,7 @@ public class ezAR extends CordovaPlugin {
 			@Override
 			public void run() {
 				try {
-					isPreviewing = true;
+					setIsPreviewing(true);
 					updateCameraDisplayOrientation();
 
 					//configure scaled CVG size & preview matrix
@@ -388,9 +401,13 @@ public class ezAR extends CordovaPlugin {
 	}
 
 	private void stopPreview(final CallbackContext callbackContext) {
+		stopPreview(callbackContext,true);
+	}
+
+	private void stopPreview(final CallbackContext callbackContext, final boolean updateWebView) {
 		Log.d(TAG, "stopPreview called");
 
-		if (!isPreviewing) { //do nothing if not currently previewing
+		if (!isPreviewing()) { //do nothing if not currently previewing
 			if (callbackContext != null) {
 				callbackContext.success();
 			}
@@ -401,15 +418,17 @@ public class ezAR extends CordovaPlugin {
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					webViewView.setBackgroundColor(getBackgroundColor());
-					resetCordovaViewContainerSize();
+					if (updateWebView) {
+						webViewView.setBackgroundColor(getBackgroundColor());
+						resetCordovaViewContainerSize();
+					}
 				}
 			});
 
 			camera.stopPreview();
 			camera.setPreviewDisplay(null);
 			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, null);
-			camera.release();			
+			camera.release();
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -417,7 +436,7 @@ public class ezAR extends CordovaPlugin {
 
 		cameraId = UNDEFINED;
 		camera = null;
-		isPreviewing = false;
+		setIsPreviewing(false);
 
 		if (callbackContext != null) {
 			callbackContext.success();
@@ -503,14 +522,16 @@ public class ezAR extends CordovaPlugin {
 
 	@Override
 	public void onPause(boolean multitasking) {
+		Log.d(TAG,"pause");
+
 		super.onPause((multitasking));
-		if (isPreviewing) {
+		if (isPreviewing()) {
 			int camId = cameraId;
 			CameraDirection camDir = cameraDirection;
-			stopPreview(null);
+			stopPreview(null,false);
 
 			//reset state so it can be restored onResume
-			isPreviewing = true;
+			setIsPreviewing(true);
 			this.cameraId = camId;
 			this.cameraDirection = camDir;
 		}
@@ -521,10 +542,16 @@ public class ezAR extends CordovaPlugin {
 
 	@Override
 	public void onResume(boolean multitasking) {
+		Log.d(TAG,"resume");
+
 		super.onResume(multitasking);
 
-		//must wait until surfaceTexture is available for use by camera before starting preview
-		//see onSurfaceTextureAvailable
+		if (isPreviewing() && !surfaceDestroyed) {
+			forcePreviewRestart();
+		} else {
+			//must wait until surfaceTexture is available for use by camera before starting preview
+			//see onSurfaceTextureAvailable
+		}
 
 		isPaused = false;
 	}
@@ -912,6 +939,14 @@ public class ezAR extends CordovaPlugin {
 
 	public TextureView getCameraView() {
 		return cameraView;
+	}
+
+	private void setIsPreviewing(boolean val) {
+		isPreviewing = val;
+	}
+
+	public Boolean isPreviewing() {
+		return isPreviewing;
 	}
 
 	//reflectively access VideoOverlay plugin to get camera in same direction as lightLoc
