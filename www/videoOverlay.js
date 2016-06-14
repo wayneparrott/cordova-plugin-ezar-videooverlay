@@ -46,10 +46,10 @@ module.exports = (function() {
                   (options.backgroundColor === undefined ||
                    typeof options.backgroundColor != 'string' ||
                    !(/^#?[0-9A-F]{6}$/i.test(options.backgroundColor))) ?
-                  '#000000' :
+                  '#FFFFFF' :
                   options.backgroundColor;
         backgroundColorRGB =
-            backgroundColorRGB.startsWith('#') ?
+            backgroundColorRGB.charAt(0) == '#' ?
                 backgroundColorRGB :
                 '#' + backgroundColorRGB;
                   
