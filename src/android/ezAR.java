@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.cordova.CallbackContext;
@@ -491,13 +494,14 @@ public class ezAR extends CordovaPlugin {
 		}
 
 //		camera.enableShutterSound(true);  //requires api 17
-
+		int camWidth = isPortraitOrientation() ? cameraView.getHeight() : cameraView.getWidth();
+		int camHt = isPortraitOrientation() ? cameraView.getWidth() : cameraView.getHeight();
 		previewSizePair = selectSizePair(
 				cameraParameters.getPreferredPreviewSizeForVideo(),
 				cameraParameters.getSupportedPreviewSizes(),
 				cameraParameters.getSupportedPictureSizes(),
-				cameraView.getWidth(),
-				cameraView.getHeight());
+				camWidth,
+				camHt);
 
 		Log.d(TAG, "preview size: " + previewSizePair.previewSize.width + ":" + previewSizePair.previewSize.height);
 
@@ -730,14 +734,33 @@ public class ezAR extends CordovaPlugin {
 		List<SizePair> validPreviewSizes =
 				generateValidPreviewSizeList(supportedPreviewSizes,supportedPictureSizes);
 
+
+		SizePair selectedPair = null;
+
+		//strategy #1 - match aspect ratio exactly with scale of 1x or 2x
+		float targetAspectRatio = (float)desiredWidth / (float)desiredHeight;
+		int targetArea = desiredHeight * desiredWidth;
+		for (SizePair sizePair : validPreviewSizes) {
+
+			if (Math.abs(targetAspectRatio - sizePair.previewAspectRatio) < 0.05) {
+				//exact aspect ratio match
+				//ensure that sizePair
+
+				if (sizePair.previewSizeArea <= targetArea) {
+					return sizePair;
+				}
+			}
+		}
+
+		//strategy 2
 		// The method for selecting the best size is to minimize the sum of the differences between
 		// the desired values and the actual values for width and height.  This is certainly not the
 		// only way to select the best size, but it provides a decent tradeoff between using the
 		// closest aspect ratio vs. using the closest pixel area.
-		SizePair selectedPair = null;
 		int minDiff = Integer.MAX_VALUE;
 		for (SizePair sizePair : validPreviewSizes) {
 
+			//use camera's preferred video size if  possible
 			if (preferredVideoSize != null && preferredVideoSize.equals(sizePair.previewSize)) {
 				return sizePair;
 			}
@@ -747,7 +770,7 @@ public class ezAR extends CordovaPlugin {
 				continue;
 			}
 
-			//find largest previewSize w/ area < desired area
+			//find largest previewSize w/ perimeter < desired perimeter
 			Camera.Size size = sizePair.previewSize;
 			int diff = (desiredWidth + desiredHeight) - (size.width + size.height);
 			if (0 <= diff && diff < minDiff) {
@@ -778,15 +801,19 @@ public class ezAR extends CordovaPlugin {
 		public Camera.Size previewSize;
 		public Camera.Size pictureSize;
 		public float previewAspectRatio;
+		public int previewSizeArea;
 
 		public SizePair(Camera.Size previewSize,
 						Camera.Size pictureSize) {
 			this.previewSize = previewSize;
 			this.pictureSize = pictureSize;
-			this.previewAspectRatio = this.previewSize.width / this.previewSize.height;
+			this.previewAspectRatio = (float)this.previewSize.width / (float)this.previewSize.height;
+			previewSizeArea= previewSize.width * previewSize.height;
 		}
 
-
+		public String toString() {
+			return "w: " + previewSize.width + " h: " + previewSize.height + " ar: " + previewAspectRatio;
+		}
 	}
 
 	/**
@@ -850,9 +877,23 @@ public class ezAR extends CordovaPlugin {
 				// The null picture size will let us know that we shouldn't set a picture size.
 				validPreviewSizes.add(new SizePair(previewSize, null));
 			}
+
+			//sort largest to smallest
+			Collections.sort(validPreviewSizes, new SizeComparator());
+
 		}
 
 		return validPreviewSizes;
+	}
+
+	static class SizeComparator implements Comparator<SizePair> {
+
+		@Override
+		public int compare(SizePair lhs, SizePair rhs) {
+			if (lhs.previewSizeArea < rhs.previewSizeArea) return -1;
+			if (lhs.previewSizeArea == rhs.previewSizeArea) return 0;
+			return 1;
+		}
 	}
 
 	private Size getDefaultWebViewSize() {
