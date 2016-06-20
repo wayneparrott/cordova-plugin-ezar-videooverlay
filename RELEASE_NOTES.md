@@ -1,20 +1,23 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.5 (20160620)
+1. Android - modified strategy for camera resolution selection and UI resizing to reduce letterbox mattes 
+(black bars on opposing sides of the UI when camera aspect ratio does not match the display area). This 
+change is most noticable when in fullscreen mode, a.k.a., immersive mode.
+2. Fixed error in initializeVideoOverlay(). On older OSes the JavaScript String.startsWith() method is not
+available.
+
 ##0.2.4 (20160606)
-Changes:
 1. Added backgroundColor (#RRGGBB) property to initializeVideoOverlay options parameter. Set the background color visible when a camera is not running. This background color is 
 visible only when the HTML <body> background color is transperent.
 
 ##0.2.3 (20160503)
-Changes:
 1. Fixed render error on Galaxy S4. Removed unused setting of android picture size.
 
 ##0.2.2 (20160310)
-Changes:
 1. Fixed video orientation to rotate consistently on device rotation.
 
 ##0.2.1 (20160302-1)
-Minor changes:
 1. Fixed plugin name in plugin.xml
 
 ##0.2.0 (20160302-1)
