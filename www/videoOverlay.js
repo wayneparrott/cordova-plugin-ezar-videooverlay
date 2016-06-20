@@ -49,7 +49,7 @@ module.exports = (function() {
                   '#FFFFFF' :
                   options.backgroundColor;
         backgroundColorRGB =
-            backgroundColorRGB.startsWith('#') ?
+            backgroundColorRGB.charAt(0) == '#' ?
                 backgroundColorRGB :
                 '#' + backgroundColorRGB;
                   
