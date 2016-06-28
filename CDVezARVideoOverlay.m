@@ -267,14 +267,14 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     CDVPluginResult* pluginResult;
     NSError *error = NULL;
     
-    double x = [[command argumentAtIndex:0] doubleValue];
-    double y = [[command argumentAtIndex:1] doubleValue];
+    NSUInteger x = [[command argumentAtIndex:0] unsignedIntegerValue];
+    NSUInteger y = [[command argumentAtIndex:1] unsignedIntegerValue];
     
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     int screenWidth = screenRect.size.width;
     int screenHeight = screenRect.size.height;
-    double focus_x = x/(double)screenWidth;
-    double focus_y = y/(double)screenHeight;
+    double focus_x = x/screenWidth;
+    double focus_y = y/screenHeight;
     
     CGPoint pt = CGPointMake(focus_x,focus_y);
     
@@ -292,6 +292,8 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
             pluginResult =
                 [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                               messageAsDictionary: errorResult];
+                
+            return  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
         
     } else {
@@ -305,30 +307,7 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void) resetFocus:(CDVInvokedUrlCommand*)command
-{
-    CDVPluginResult* pluginResult;
-    NSError *error = NULL;
-
-    if ([videoDevice isFocusModeSupported: AVCaptureFocusModeContinuousAutoFocus]) {
-        
-        if ([videoDevice lockForConfiguration:&error]) {
-            videoDevice.focusMode = AVCaptureFocusModeContinuousAutoFocus;
-            [videoDevice unlockForConfiguration];
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-            
-        } else {
-            //error, no device lock obtained
-            NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_INVALID_STATE withData:@"Invalid camera state"];
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary: errorResult];
-        }
-    } else {
-        //do nothing
-    }
-    
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
+ 
 - (UIImageView *) getCameraView
 {
     //UIImageView* cameraView = camController.view;

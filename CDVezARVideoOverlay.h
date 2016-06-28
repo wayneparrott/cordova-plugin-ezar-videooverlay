@@ -45,8 +45,6 @@
 
 - (void) setFocus:(CDVInvokedUrlCommand*)command;
 
-- (void) resetFocus:(CDVInvokedUrlCommand*)command;
-
 - (UIImageView *) getCameraView;
 
 - (AVCaptureSession *) getAVCaptureSession;
