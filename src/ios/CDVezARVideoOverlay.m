@@ -278,29 +278,32 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     
     CGPoint pt = CGPointMake(focus_x,focus_y);
     
-    if ([videoDevice isFocusPointOfInterestSupported] && [videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
+    if ([videoDevice lockForConfiguration:&error]) {
         
-        if ([videoDevice lockForConfiguration:&error]) {
-            [videoDevice setFocusPointOfInterest:pt];
-            [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
-            [videoDevice unlockForConfiguration];
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        if ([videoDevice isFocusPointOfInterestSupported] && [videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
+            videoDevice.focusPointOfInterest = pt;
+            videoDevice.focusMode = AVCaptureFocusModeAutoFocus;
             
+            if ([videoDevice isExposurePointOfInterestSupported] && [videoDevice isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
+                videoDevice.exposurePointOfInterest = pt;
+                videoDevice.exposureMode =AVCaptureExposureModeAutoExpose;
+            }
+            
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         } else {
-           //error, no device lock obtained
-            NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_INVALID_STATE withData:@"Invalid camera state"];
-            pluginResult =
-                [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                              messageAsDictionary: errorResult];
+            NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_ERROR withData:@"Camera does not support focus mode."];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                          messageAsDictionary: errorResult];
         }
+
+        [videoDevice unlockForConfiguration];
         
     } else {
-        NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_ERROR withData:@"Camera does not support focus mode."];
-        pluginResult =
-            [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                      messageAsDictionary: errorResult];
+        //error, no device lock obtained
+        NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_INVALID_STATE withData:@"Invalid camera state"];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                     messageAsDictionary: errorResult];
     }
-    
     
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
@@ -310,22 +313,30 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     CDVPluginResult* pluginResult;
     NSError *error = NULL;
 
-    if ([videoDevice isFocusModeSupported: AVCaptureFocusModeContinuousAutoFocus]) {
+    if ([videoDevice lockForConfiguration:&error]) {
         
-        if ([videoDevice lockForConfiguration:&error]) {
+        if ([videoDevice isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
             videoDevice.focusMode = AVCaptureFocusModeContinuousAutoFocus;
-            [videoDevice unlockForConfiguration];
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-            
-        } else {
-            //error, no device lock obtained
-            NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_INVALID_STATE withData:@"Invalid camera state"];
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary: errorResult];
+        } else if ([videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
+            videoDevice.focusMode = AVCaptureFocusModeAutoFocus;
         }
-    } else {
-        //do nothing
-    }
+        
+        if ([videoDevice isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+            videoDevice.exposureMode = AVCaptureExposureModeContinuousAutoExposure;
+        } else if ([videoDevice isExposureModeSupported:AVCaptureExposureModeAutoExpose]) {
+            videoDevice.exposureMode = AVCaptureExposureModeAutoExpose;
+        }
+        
+        [videoDevice unlockForConfiguration];
     
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        
+    } else {
+        //error, no device lock obtained
+        NSDictionary* errorResult = [self makeErrorResult:EZAR_ERROR_CODE_INVALID_STATE withData:@"Invalid camera state"];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary: errorResult];
+    }
+
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
