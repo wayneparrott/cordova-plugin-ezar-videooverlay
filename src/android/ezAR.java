@@ -32,8 +32,12 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.hardware.Camera.Area;
 import android.hardware.Camera.Parameters;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -75,12 +79,19 @@ public class ezAR extends CordovaPlugin {
 	private int cameraId = -1;
 	private CameraDirection cameraDirection;
 	private int displayOrientation;
+	private String defaultFocusMode;
 	private SizePair previewSizePair = null;
 	private double currentZoom;
 	private boolean isPreviewing = false;
 	private boolean isPaused = false;
 
 	private boolean supportSnapshot;
+	private Matrix matrix;
+	private boolean continousFocusSupported;
+	private boolean focusAreaSupported;
+	private boolean meteringAreaSupported;
+	private boolean aeLockSupported;
+	private boolean awbLockSupported;
 
 	protected final static String[] permissions = {Manifest.permission.CAMERA};
 	public final static int PERMISSION_DENIED_ERROR = 20;
@@ -100,6 +111,8 @@ public class ezAR extends CordovaPlugin {
 
 					if (isPreviewing()) {
 						updateCordovaViewContainerSize();
+						updateMatrix();
+						resetFocus(null);
 					}
 				}
 			};
@@ -142,8 +155,6 @@ public class ezAR extends CordovaPlugin {
 				}
 
 			};
-
-
 
 	@Override
 	public void initialize(final CordovaInterface cordova, final CordovaWebView cvWebView) {
@@ -213,6 +224,14 @@ public class ezAR extends CordovaPlugin {
 			return true;
 		} else if (action.equals("setZoom")) {
 			this.setZoom(getDoubleOrNull(args, 0), callbackContext);
+
+			return true;
+		} else if (action.equals("setFocus")) {
+			this.setFocus(getIntOrNull(args, 0), getIntOrNull(args, 1), callbackContext);
+
+			return true;
+		} else if (action.equals("resetFocus")) {
+			this.resetFocus(callbackContext);
 
 			return true;
 		}
@@ -359,6 +378,7 @@ public class ezAR extends CordovaPlugin {
 			}
 		}
 
+		matrix = new Matrix();
 		cameraId = getCameraId(cameraDir);
 		cameraDirection = cameraDir;
 
@@ -428,6 +448,7 @@ public class ezAR extends CordovaPlugin {
 				}
 			});
 
+			camera.cancelAutoFocus();
 			camera.stopPreview();
 			camera.setPreviewDisplay(null);
 			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, null);
@@ -485,12 +506,97 @@ public class ezAR extends CordovaPlugin {
 		}
 	}
 
+	public void setFocus(int x, int y, final CallbackContext callbackContext) {
+		int FOCUS_AREA_WIDTH = 100, FOCUS_AREA_HT = 100;
+
+		if (!isPreviewing()) {
+			//error - not in preview mode
+
+		} else if (!focusAreaSupported) {
+			//todo inform user manual focus is not supported
+
+			return;
+		}
+
+		Size sz = getWebViewSize();
+		ArrayList<Area> focusArea = new ArrayList<Area>();
+		focusArea.add(new Area(new Rect(), 1));
+		ArrayList<Area> meteringArea = new ArrayList<Area>();
+		meteringArea.add(new Area(new Rect(), 1));
+
+		calculateFocusArea(FOCUS_AREA_WIDTH, FOCUS_AREA_HT, 1f, x, y, sz.width, sz.height,
+				focusArea.get(0).rect);
+		calculateFocusArea(FOCUS_AREA_WIDTH, FOCUS_AREA_HT, 1.5f, x, y, sz.width, sz.height,
+				meteringArea.get(0).rect);
+
+		Parameters parameters = camera.getParameters();
+		parameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+		parameters.setFocusAreas(focusArea);
+
+		if (meteringAreaSupported) {
+			// Use the same area for focus and metering.
+			parameters.setMeteringAreas(meteringArea);
+		}
+
+		camera.setParameters(parameters);
+		camera.autoFocus(null);
+	}
+
+
+	public void resetFocus(final CallbackContext callbackContext) {
+		if (!isPreviewing() || !focusAreaSupported) {
+			//do nothing
+			return;
+		}
+
+		Parameters parameters = camera.getParameters();
+		parameters.setFocusAreas(null);
+		if (continousFocusSupported) {
+			parameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+		} else {
+			parameters.setFocusMode(defaultFocusMode);
+		}
+
+		if (meteringAreaSupported) {
+			parameters.setMeteringAreas(null);
+		}
+
+		camera.setParameters(parameters);
+	}
+
+
+	//reused from https://android.googlesource.com/platform/packages/apps/Camera/+/jb-release/src/com/android/camera/FocusManager.java
+	private void calculateFocusArea(int focusWidth, int focusHeight, float areaMultiple,
+									int x, int y, int previewWidth, int previewHeight,
+									Rect rect) {
+		int areaWidth = (int) (focusWidth * areaMultiple);
+		int areaHeight = (int) (focusHeight * areaMultiple);
+		int left = Util.clamp(x - areaWidth / 2, 0, previewWidth - areaWidth);
+		int top = Util.clamp(y - areaHeight / 2, 0, previewHeight - areaHeight);
+		RectF rectF = new RectF(left, top, left + areaWidth, top + areaHeight);
+		matrix.mapRect(rectF);
+		Util.rectFToRect(rectF, rect);
+	}
+
+
 	private void initCamera(Camera camera) {
 		Camera.Parameters cameraParameters = camera.getParameters();
 
-		List<String> focusModes = cameraParameters.getSupportedFocusModes();
-		if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+		defaultFocusMode = cameraParameters.getFocusMode();
+
+		continousFocusSupported = cameraParameters.getSupportedFocusModes().contains(
+				Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+		focusAreaSupported = (cameraParameters.getMaxNumFocusAreas() > 0
+					&& Util.isSupported(Parameters.FOCUS_MODE_AUTO, cameraParameters.getSupportedFocusModes()));
+		meteringAreaSupported = (cameraParameters.getMaxNumMeteringAreas() > 0);
+		aeLockSupported = cameraParameters.isAutoExposureLockSupported();
+		awbLockSupported = cameraParameters.isAutoWhiteBalanceLockSupported();
+
+
+		if (continousFocusSupported) {
 			cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+		} else if (Util.isSupported(Parameters.FOCUS_MODE_AUTO, cameraParameters.getSupportedFocusModes())) {
+			cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 		}
 
 //		camera.enableShutterSound(true);  //requires api 17
@@ -602,6 +708,8 @@ public class ezAR extends CordovaPlugin {
 
 				paramsX = (FrameLayout.LayoutParams) cordovaViewContainer.getLayoutParams();
 				Log.d(TAG, "updateCordovaViewContainer POST invalidate: " + paramsX.width + ":" + paramsX.height);
+
+				updateMatrix();
 			}
 		});
 	}
@@ -622,6 +730,8 @@ public class ezAR extends CordovaPlugin {
 
 				View v = cordova.getActivity().findViewById(android.R.id.content);
 				v.requestLayout();
+
+				updateMatrix();
 			}
 		});
 	}
@@ -657,16 +767,7 @@ public class ezAR extends CordovaPlugin {
 	public void updateCameraDisplayOrientation() {
 		displayOrientation = getRoatationAngle(cameraId);
 		camera.setDisplayOrientation(displayOrientation);
-
-//moved to snapshot plugin
-//		Camera.Parameters params = camera.getParameters();
-//		//params.setRotation(result);
-//		if (cameraDirection == CameraDirection.FRONT) {
-//			result -= 90;
-//		}
-//		params.setRotation(result % 360);
-//		camera.setParameters(params);
-
+		updateMatrix();
 		Log.i(TAG, "updateCameraDeviceOrientation: " + displayOrientation);
 	}
 
@@ -677,41 +778,31 @@ public class ezAR extends CordovaPlugin {
 	 * @return angel to rotate
 	 */
 	public int getRoatationAngle(int cameraId) {
-		Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
-		Camera.getCameraInfo(cameraId, info);
-		int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-		int degrees = 0;
-		switch (rotation) {
-			case Surface.ROTATION_0:
-				degrees = 0;
-				break;
-			case Surface.ROTATION_90:
-				degrees = 90;
-				break;
-			case Surface.ROTATION_180:
-				degrees = 180;
-				break;
-			case Surface.ROTATION_270:
-				degrees = 270;
-				break;
-		}
-		int result;
-		if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-			result = (info.orientation + degrees) % 360;
-			result = (360 - result) % 360; // compensate the mirror
-		} else { // back-facing
-			result = (info.orientation - degrees + 360) % 360;
-		}
-
+		int rotation = Util.getDisplayRotation(activity);
+		int result = Util.getDisplayOrientation(rotation,cameraId);
 		return result;
 	}
 
 	private boolean isPortraitOrientation() {
-		Display display = activity.getWindowManager().getDefaultDisplay();
-		boolean isPortrait = display.getRotation() == Surface.ROTATION_0 || display.getRotation() == Surface.ROTATION_180;
-		return isPortrait;
+		int rotation = Util.getDisplayRotation(activity);
+		return rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180;
 	}
 
+	private boolean isMirror() {
+		return cameraDirection != null ? cameraDirection.isMirror() : false;
+	}
+
+	private void updateMatrix() {
+		Matrix workMatrix = new Matrix();
+		Size sz = getWebViewSize();
+
+		Util.prepareMatrix(workMatrix, isMirror(), getDisplayOrientation(), sz.width, sz.height);
+
+		// In face detection, the matrix converts the driver coordinates to UI
+		// coordinates. In tap focus, the inverted matrix converts the UI
+		// coordinates to driver coordinates.
+		workMatrix.invert(matrix);
+	}
 
 	/**
 	 * Selects the most suitable preview and picture size, given the desired width and height.
@@ -899,6 +990,12 @@ public class ezAR extends CordovaPlugin {
 	private Size getDefaultWebViewSize() {
 		FrameLayout cvcParent = (FrameLayout)cordovaViewContainer.getParent();
 		Size sz = new Size(cvcParent.getWidth(),cvcParent.getHeight());
+		return sz;
+	}
+
+	private Size getWebViewSize() {
+		FrameLayout.LayoutParams params = (FrameLayout.LayoutParams)cordovaViewContainer.getLayoutParams();
+		Size sz = new Size(params.width,params.height);
 		return sz;
 	}
 
