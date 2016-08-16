@@ -169,7 +169,13 @@ public class ezAR extends CordovaPlugin {
 
 				//configure webview
 				webViewView.setKeepScreenOn(true);
-				webViewView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+				
+				Log.d(TAG,"WebView HW accelerated: " + webViewView.isHardwareAccelerated());
+				// if (webViewView.isHardwareAccelerated()) {
+				// 	webViewView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null);
+				// } else {
+				// 	webViewView.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+				// }
 
 				//temporarily remove webview from view stack
 				((ViewGroup) webViewView.getParent()).removeView(webViewView);
