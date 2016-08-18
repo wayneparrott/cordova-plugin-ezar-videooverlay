@@ -332,7 +332,7 @@ public class ezAR extends CordovaPlugin {
 		callbackContext.success(jsonObject);
 	}
 
-	@Override
+	//removed @Override, causes compile issue for cordova 5 & earlier that does not have this method.
 	public void onRequestPermissionResult(int requestCode, String[] permissions,
 										  int[] grantResults) throws JSONException {
 		for (int r : grantResults) {
