@@ -124,6 +124,50 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
 	};
 
 	/**
+	 * Manually set focus point (x,y)
+	 * @param {int} horizontal point of focus
+     * @param {int} horizontal point of focus  
+	 * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+	 */
+	this.setFocus = function(x, y, successCallback,errorCallback) {
+	   var x = Math.min(Math.max(x,0), window.innerWidth);
+	   var y = Math.min(Math.max(y,0), window.innerHeight);
+     
+        if (_self.isActive() && _self.isRunning()) {
+            exec(successCallback,
+                 function(error) {
+                    if (isFunction(errorCallback)) {
+                        errorCallback(error);
+                    }
+                 },          
+                 "videoOverlay",
+                 "setFocus",
+                 [x,y]);
+        }
+	};
+
+	/**
+	 * Reset to default focus mode
+	 * @param {function} [successCB] function called on success
+	 * @param {function} [errorCB] function with error data parameter called on error
+	 */
+	this.resetFocus = function(successCallback,errorCallback) {
+
+        if (_self.isActive() && _self.isRunning()) {
+            exec(successCallback,
+                 function(error) {
+                    if (isFunction(errorCallback)) {
+                        errorCallback(error);
+                    }
+                 },          
+                 "videoOverlay",
+                 "resetFocus",
+                 []);
+        }
+	};
+
+	/**
 	 * Start video capture and presentation. This camera is the ezar#activeCamera
 	 * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error

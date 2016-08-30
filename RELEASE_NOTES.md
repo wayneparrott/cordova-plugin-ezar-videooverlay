@@ -1,5 +1,11 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.6 (20160818)
+1. Android - rolled back agressive use of hardware acceleration. In some cases users reported slower performance. 
+Now uses device default hardware acceleration settings.
+2. Android - fixed compile issue on Cordova 5 and earlier versions
+
+
 ##0.2.5 (20160620)
 1. Android - modified strategy for camera resolution selection and UI resizing to reduce letterbox mattes 
 (black bars on opposing sides of the UI when camera aspect ratio does not match the display area). This 
