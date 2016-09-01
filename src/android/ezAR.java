@@ -202,7 +202,17 @@ public class ezAR extends CordovaPlugin {
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
-
+				if("org.xwalk.core.XWalkView".equals(webViewView.getClass().getName())
+						|| "org.crosswalk.engine.XWalkCordovaView".equals(webViewView.getClass().getName())) {
+					try {
+					/* view.setZOrderOnTop(true)
+					 * Called just in time as with root.setBackground(...) the color
+					 * come in front and take the whoel screen */
+						webViewView.getClass().getMethod("setZOrderOnTop", boolean.class)
+								.invoke(webViewView, true);
+					}
+					catch(Exception e) {}
+				}
 				((FrameLayout)cordovaViewContainer.getParent()).addOnLayoutChangeListener(layoutChangeListener);
 				((FrameLayout)cordovaViewContainer.getParent()).setBackgroundColor(Color.BLACK);
 			}
