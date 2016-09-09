@@ -20,7 +20,7 @@ public enum CameraDirection {
 			return Camera.CameraInfo.CAMERA_FACING_BACK;
 		}
 		
-		public boolean isFlipping() {
+		public boolean isMirror() {
 			return false;
 		}
 	},
@@ -29,14 +29,14 @@ public enum CameraDirection {
 			return Camera.CameraInfo.CAMERA_FACING_FRONT;
 		}		
 		
-		public boolean isFlipping() {
+		public boolean isMirror() {
 			return true;
 		}
 	}
 	;
 
 	public abstract int getDirection();
-	public abstract boolean isFlipping();
+	public abstract boolean isMirror();
 
 	public static CameraDirection fromCameraInfo(CameraInfo info) {
 		return values()[info.facing];
