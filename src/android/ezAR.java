@@ -424,6 +424,7 @@ public class ezAR extends CordovaPlugin {
 					setZoom(zoom, null);
 
 					sendFlashlightEvent(STARTED, cameraDirection, cameraId, camera);
+					sendFaceDetectorEvent(STARTED, cameraDirection, cameraId, camera);
 
 					if (callbackContext != null) {
 						callbackContext.success();
@@ -467,7 +468,8 @@ public class ezAR extends CordovaPlugin {
 			camera.cancelAutoFocus();
 			camera.stopPreview();
 			camera.setPreviewDisplay(null);
-			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, null);
+			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, camera);
+			sendFaceDetectorEvent(STOPPED, cameraDirection, cameraId, camera);
 			camera.release();
 
 		} catch (IOException e) {
@@ -1139,6 +1141,41 @@ public class ezAR extends CordovaPlugin {
 		}
 	}
 
+	//reflectively access VideoOverlay plugin to get camera in same direction as lightLoc
+	private void sendFaceDetectorEvent((int state, CameraDirection cameraDirection, int cameraId, Camera camera) {
+
+		CordovaPlugin faceDetectorPlugin = getFaceDetectorPlugin();
+		if (faceDetectorPlugin == null) {
+			return;
+		}
+
+		Method method = null;
+
+		try {
+			if (state == STARTED) {
+				method = faceDetectorPlugin.getClass().getMethod("videoOverlayStarted", int.class, int.class, Camera.class );
+			} else {
+				method = faceDetectorPlugin.getClass().getMethod("videoOverlayStopped", int.class, int.class, Camera.class );
+			}
+		} catch (SecurityException e) {
+			//e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			//e.printStackTrace();
+		}
+
+		try {
+			if (method == null) return;
+
+			method.invoke(faceDetectorPlugin, cameraDirection.ordinal(), cameraId, camera);
+
+		} catch (IllegalArgumentException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		} catch (IllegalAccessException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		} catch (InvocationTargetException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		}
+	}
 
 	private CordovaPlugin getPlugin(String pluginName) {
 		CordovaPlugin plugin = webView.getPluginManager().getPlugin(pluginName);
@@ -1155,4 +1192,8 @@ public class ezAR extends CordovaPlugin {
 		return getPlugin(pluginName);
 	}
 
+	private CordovaPlugin getFaceDetectorPlugin() {
+		String pluginName = "facedetector";
+		return getPlugin(pluginName);
+	}
 }
