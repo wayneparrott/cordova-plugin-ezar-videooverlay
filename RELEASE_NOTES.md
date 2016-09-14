@@ -1,5 +1,8 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+0.2.8
+added NSCameraUsageDescription
+
 ##0.2.7 (20160901)
 1. Android - added support for the [Crosswalk webview](https://crosswalk-project.org/). 
 
