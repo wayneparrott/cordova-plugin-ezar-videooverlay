@@ -1,7 +1,8 @@
 #ezAR VideoOverlay Plugin Release Notes
 
-0.2.8
-added NSCameraUsageDescription
+##0.2.8 (20160915)
+1. iOS - added NSCameraUsageDescription to plist, required for iOS 10
+
 
 ##0.2.7 (20160901)
 1. Android - added support for the [Crosswalk webview](https://crosswalk-project.org/). 
@@ -20,18 +21,23 @@ change is most noticable when in fullscreen mode, a.k.a., immersive mode.
 2. Fixed error in initializeVideoOverlay(). On older OSes the JavaScript String.startsWith() method is not
 available.
 
+
 ##0.2.4 (20160606)
 1. Added backgroundColor (#RRGGBB) property to initializeVideoOverlay options parameter. Set the background color visible when a camera is not running. This background color is 
 visible only when the HTML <body> background color is transperent.
 
+
 ##0.2.3 (20160503)
 1. Fixed render error on Galaxy S4. Removed unused setting of android picture size.
+
 
 ##0.2.2 (20160310)
 1. Fixed video orientation to rotate consistently on device rotation.
 
+
 ##0.2.1 (20160302-1)
 1. Fixed plugin name in plugin.xml
+
 
 ##0.2.0 (20160302-1)
 This update is refactor of the previous super ezar plugin to only include functionality  
