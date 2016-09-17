@@ -10,10 +10,13 @@
  * Please see LICENSE or http://ezartech.com/ezarstartupkit-license for more information
  *
  */
- 
+
+//#import <WebKit/WebKit.h>
+
 #import "CDVezARVideoOverlay.h"
 #import "CDVezARCameraViewController.h"
 #import "MainViewController.h"
+
 
 NSString *const EZAR_ERROR_DOMAIN = @"EZAR_ERROR_DOMAIN";
 NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
@@ -561,8 +564,15 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
         @"document.body.style.display='none';"
          "setTimeout(function(){document.body.style.display='block'},10);";
     
+    if ([self.webView isKindOfClass:[UIWebView class]]) {
+        [(UIWebView*)self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+    }
+    
     //todo add logic to account for wkwebview
-	[(UIWebView*)self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+    /* else if ([self.webView isKindOfClass:[WKWebView class]]) {
+        [(WKWebView*)self.webView stringByEvaluatingJavaScriptFromString: jsstring];
+    }
+    */
 }
 
 
