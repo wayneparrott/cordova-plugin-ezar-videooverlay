@@ -1,5 +1,9 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.9 (20160921)
+1. iOS - added support for WKWebView
+
+
 ##0.2.8 (20160915)
 1. iOS - added NSCameraUsageDescription to plist, required for iOS 10
 
