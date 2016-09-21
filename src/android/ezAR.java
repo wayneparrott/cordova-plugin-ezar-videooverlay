@@ -1085,8 +1085,8 @@ public class ezAR extends CordovaPlugin {
 		return camera;
 	}
 
-	public CameraDirection getActiveCameraDirection() {
-		return cameraDirection;
+	public int getActiveCameraDirection() {
+		return cameraDirection.getDirection();
 	}
 
 	public Integer getDisplayOrientation() {
@@ -1142,7 +1142,7 @@ public class ezAR extends CordovaPlugin {
 	}
 
 	//reflectively access VideoOverlay plugin to get camera in same direction as lightLoc
-	private void sendFaceDetectorEvent((int state, CameraDirection cameraDirection, int cameraId, Camera camera) {
+	private void sendFaceDetectorEvent(int state, CameraDirection cameraDirection, int cameraId, Camera camera) {
 
 		CordovaPlugin faceDetectorPlugin = getFaceDetectorPlugin();
 		if (faceDetectorPlugin == null) {
