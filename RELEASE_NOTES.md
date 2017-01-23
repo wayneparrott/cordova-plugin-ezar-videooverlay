@@ -1,5 +1,9 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.10 (20170123)
+1. iOS - handle multiple calls to initializeVideoOverlay()
+
+
 ##0.2.9 (20160921)
 1. iOS - added support for WKWebView
 
