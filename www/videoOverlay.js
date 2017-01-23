@@ -52,7 +52,11 @@ module.exports = (function() {
             backgroundColorRGB.charAt(0) == '#' ?
                 backgroundColorRGB :
                 '#' + backgroundColorRGB;
-                  
+                
+        var fitWebviewToCameraView = 
+                options.fitWebviewToCameraView === undefined ? true : 
+                !!options.fitWebviewToCameraView;
+        
         //execute successCallback immediately if already initialized
     	if (_ezAR.isVideoOverlayInitialized()) {
            if (isFunction(successCallback)) successCallback();
@@ -78,7 +82,7 @@ module.exports = (function() {
              _onError,
             "videoOverlay",
             "init",
-            [backgroundColorRGB]);
+            [backgroundColorRGB, fitWebviewToCameraView]);
     }
     
     /**
