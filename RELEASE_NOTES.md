@@ -1,15 +1,18 @@
 #ezAR VideoOverlay Plugin Release Notes
 
 ##0.2.10 (20170123)
-1. iOS - handle multiple calls to initializeVideoOverlay()
+1. iOS - handle multiple calls to initializeVideoOverlay().
+2. Android - added new android specific initializeVideoOverlay option 'fitWebViewToCameraView'.
+3. Android - fixed issue where [no camera preview size is selected]https://support.ezartech.com/index.php?p=/discussion/49/videooverlay-ezar-java-selectsizepair-return-null-value
+ resulted in NPE.
 
 
 ##0.2.9 (20160921)
-1. iOS - added support for WKWebView
+1. iOS - added support for WKWebView.
 
 
 ##0.2.8 (20160915)
-1. iOS - added NSCameraUsageDescription to plist, required for iOS 10
+1. iOS - added NSCameraUsageDescription to plist, required for iOS 10.
 
 
 ##0.2.7 (20160901)
