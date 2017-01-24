@@ -4,7 +4,7 @@
  *
  * By @wayne_parrott, @vridosh, @kwparrott
  *
- * Licensed under a modified MIT license. 
+ * Licensed under a modified MIT license.
  * Please see LICENSE or http://ezartech.com/ezarstartupkit-license for more information
  *
  */
@@ -169,7 +169,7 @@ public class ezAR extends CordovaPlugin {
 
 				//configure webview
 				webViewView.setKeepScreenOn(true);
-				
+
 				Log.d(TAG,"WebView HW accelerated: " + webViewView.isHardwareAccelerated());
 				// if (webViewView.isHardwareAccelerated()) {
 				// 	webViewView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null);
@@ -262,17 +262,28 @@ public class ezAR extends CordovaPlugin {
 
 		if (args != null) {
 			String rgb = DEFAULT_RGB;
+      boolean fitWebViewToCameraViewArg = false;
+
 			try {
 				rgb = args.getString(0);
+        fitWebViewToCameraViewArg = args.getBoolean(1);
 			} catch (JSONException e) {
 				//do nothing; resort to DEFAULT_RGB
 			}
-
+      final boolean fitWebViewToCameraView = fitWebViewToCameraViewArg;
 			setBackgroundColor(Color.parseColor(rgb));
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					webViewView.setBackgroundColor(getBackgroundColor());
+
+          if (!fitWebViewToCameraView) {
+           		cordovaViewContainer.removeView(webViewView);
+           		((FrameLayout)cordovaViewContainer.getParent()).addView(webViewView,
+           			new ViewGroup.LayoutParams(
+           				LayoutParams.MATCH_PARENT,
+           				LayoutParams.MATCH_PARENT));
+           }
 				}
 			});
 		}
@@ -630,7 +641,7 @@ public class ezAR extends CordovaPlugin {
 		Log.d(TAG, "preview size: " + previewSizePair.previewSize.width + ":" + previewSizePair.previewSize.height);
 
 		cameraParameters.setPreviewSize(previewSizePair.previewSize.width, previewSizePair.previewSize.height);
-		
+
 		//commenting out; not used now
 		//Camera.Size picSize = previewSizePair.pictureSize != null ? previewSizePair.pictureSize : previewSizePair.previewSize;
 		//cameraParameters.setPictureSize(picSize.width,picSize.height);
