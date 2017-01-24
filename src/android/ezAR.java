@@ -885,11 +885,6 @@ public class ezAR extends CordovaPlugin {
 				return sizePair;
 			}
 
-			if (supportedPictureSizes != null && sizePair.pictureSize == null) {
-				//req'd picture size not avail for this previewSize; skip it
-				continue;
-			}
-
 			//find largest previewSize w/ perimeter < desired perimeter
 			Camera.Size size = sizePair.previewSize;
 			int diff = (desiredWidth + desiredHeight) - (size.width + size.height);
