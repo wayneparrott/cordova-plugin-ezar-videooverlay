@@ -37,7 +37,8 @@ module.exports = (function() {
      * @param {function} [successCB] function called on success
 	 * @param {function} [errorCB] function with error data parameter called on error
      * @param {options} {
-     *        backgroundColor: '#RRGGBB' = '#FFFFFF'
+     *        backgroundColor: '#RRGGBB' = '#FFFFFF',
+     *        fitWebViewToCameraView: boolean
      *     }
      */
     _ezAR.initializeVideoOverlay = function(successCallback,errorCallback,options) {
