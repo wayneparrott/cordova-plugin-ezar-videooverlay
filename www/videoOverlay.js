@@ -1,4 +1,3 @@
-cordova.define("com.ezartech.ezar.videooverlay.videoOverlay", function(require, exports, module) {
 /**
  * videoOverlay.js
  * Copyright 2015-2016, ezAR Technologies
@@ -203,6 +202,3 @@ module.exports = (function() {
     return _ezAR;
 
 }());
-
-
-});
