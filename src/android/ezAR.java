@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -41,7 +40,6 @@ import android.hardware.Camera.Area;
 import android.hardware.Camera.Parameters;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.Surface;
@@ -49,7 +47,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.webkit.WebView;
 import android.widget.FrameLayout;
 
 
@@ -68,7 +65,7 @@ public class ezAR extends CordovaPlugin {
 	private CallbackContext callbackContext;
 
 	private Activity activity;
-	private FrameLayout cordovaViewContainer;
+	private FrameLayout cameraViewContainer;
 	private View webViewView;
 	private TextureView cameraView;
 
@@ -114,7 +111,7 @@ public class ezAR extends CordovaPlugin {
 						updateMatrix();
 						resetFocus(null);
 					} else {
-           				resetCordovaViewContainerSize();
+           				resetCameraViewContainerSize();
           			}
 				}
 			};
@@ -182,9 +179,9 @@ public class ezAR extends CordovaPlugin {
 				//temporarily remove webview from view stack
 				((ViewGroup) webViewView.getParent()).removeView(webViewView);
 
-				cordovaViewContainer = new FrameLayout(activity);
-				cordovaViewContainer.setBackgroundColor(Color.BLACK);
-				activity.setContentView(cordovaViewContainer,
+				cameraViewContainer = new FrameLayout(activity);
+				cameraViewContainer.setBackgroundColor(Color.BLACK);
+				activity.setContentView(cameraViewContainer,
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
@@ -193,14 +190,14 @@ public class ezAR extends CordovaPlugin {
 
 				cameraView = new TextureView(activity);
 				cameraView.setSurfaceTextureListener(mSurfaceTextureListener);
-				cordovaViewContainer.addView(cameraView,
+				cameraViewContainer.addView(cameraView,
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
 
 
 				//add webview on top of videoOverlay
-				cordovaViewContainer.addView(webViewView,
+				cameraViewContainer.addView(webViewView,
 						new ViewGroup.LayoutParams(
 								LayoutParams.MATCH_PARENT,
 								LayoutParams.MATCH_PARENT));
@@ -215,8 +212,8 @@ public class ezAR extends CordovaPlugin {
 					}
 					catch(Exception e) {}
 				}
-				((FrameLayout)cordovaViewContainer.getParent()).addOnLayoutChangeListener(layoutChangeListener);
-				((FrameLayout)cordovaViewContainer.getParent()).setBackgroundColor(Color.BLACK);
+				((FrameLayout) cameraViewContainer.getParent()).addOnLayoutChangeListener(layoutChangeListener);
+				((FrameLayout) cameraViewContainer.getParent()).setBackgroundColor(Color.BLACK);
 			}
 		});
 	}
@@ -280,8 +277,8 @@ public class ezAR extends CordovaPlugin {
 					webViewView.setBackgroundColor(getBackgroundColor());
 
           if (!fitWebViewToCameraView) {
-           		cordovaViewContainer.removeView(webViewView);
-           		((FrameLayout)cordovaViewContainer.getParent()).addView(webViewView,
+           		cameraViewContainer.removeView(webViewView);
+           		((FrameLayout) cameraViewContainer.getParent()).addView(webViewView,
            			new ViewGroup.LayoutParams(
            				LayoutParams.MATCH_PARENT,
            				LayoutParams.MATCH_PARENT));
@@ -473,7 +470,7 @@ public class ezAR extends CordovaPlugin {
 				public void run() {
 					if (updateWebView) {
 						webViewView.setBackgroundColor(getBackgroundColor());
-						resetCordovaViewContainerSize();
+						resetCameraViewContainerSize();
 					}
 				}
 			});
@@ -703,7 +700,7 @@ public class ezAR extends CordovaPlugin {
 		cordova.getActivity().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				FrameLayout.LayoutParams paramsX = (FrameLayout.LayoutParams) cordovaViewContainer.getLayoutParams();
+				FrameLayout.LayoutParams paramsX = (FrameLayout.LayoutParams) cameraViewContainer.getLayoutParams();
 				Log.d(TAG,"updateCordovaViewContainer PRE invalidate: " + paramsX.width + ":" + paramsX.height);
 
 				Size sz = getDefaultWebViewSize();
@@ -726,18 +723,18 @@ public class ezAR extends CordovaPlugin {
 
 				Log.d(TAG, "updateCordovaViewContainer cvs size: " + cvcWidth + ":" + cvcHt);
 
-				FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) cordovaViewContainer.getLayoutParams();
+				FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) cameraViewContainer.getLayoutParams();
 				params.width = cvcWidth;
 				params.height = cvcHt;
 				params.gravity = Gravity.CENTER;
-				cordovaViewContainer.setLayoutParams(params);
+				cameraViewContainer.setLayoutParams(params);
 
 				View v = cordova.getActivity().findViewById(android.R.id.content);
 				v.requestLayout();
 
 				updateCameraDisplayOrientation();
 
-				paramsX = (FrameLayout.LayoutParams) cordovaViewContainer.getLayoutParams();
+				paramsX = (FrameLayout.LayoutParams) cameraViewContainer.getLayoutParams();
 				Log.d(TAG, "updateCordovaViewContainer POST invalidate: " + paramsX.width + ":" + paramsX.height);
 
 				updateMatrix();
@@ -745,7 +742,7 @@ public class ezAR extends CordovaPlugin {
 		});
 	}
 
-	private void resetCordovaViewContainerSize() {
+	private void resetCameraViewContainerSize() {
 		cordova.getActivity().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -753,11 +750,11 @@ public class ezAR extends CordovaPlugin {
 				int cvcWidth = sz.width;
 				int cvcHt =  sz.height;
 
-				FrameLayout.LayoutParams params = (FrameLayout.LayoutParams)cordovaViewContainer.getLayoutParams();
+				FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) cameraViewContainer.getLayoutParams();
 				params.width = cvcWidth;
 				params.height = cvcHt;
 				params.gravity = Gravity.FILL;
-				cordovaViewContainer.setLayoutParams(params);
+				cameraViewContainer.setLayoutParams(params);
 
 				View v = cordova.getActivity().findViewById(android.R.id.content);
 				v.requestLayout();
@@ -1014,13 +1011,13 @@ public class ezAR extends CordovaPlugin {
 	}
 
 	private Size getDefaultWebViewSize() {
-		FrameLayout cvcParent = (FrameLayout)cordovaViewContainer.getParent();
+		FrameLayout cvcParent = (FrameLayout) cameraViewContainer.getParent();
 		Size sz = new Size(cvcParent.getWidth(),cvcParent.getHeight());
 		return sz;
 	}
 
 	private Size getWebViewSize() {
-		FrameLayout.LayoutParams params = (FrameLayout.LayoutParams)cordovaViewContainer.getLayoutParams();
+		FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) cameraViewContainer.getLayoutParams();
 		Size sz = new Size(params.width,params.height);
 		return sz;
 	}
