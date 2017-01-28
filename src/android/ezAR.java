@@ -113,7 +113,9 @@ public class ezAR extends CordovaPlugin {
 						updateCordovaViewContainerSize();
 						updateMatrix();
 						resetFocus(null);
-					}
+					} else {
+           				resetCordovaViewContainerSize();
+          			}
 				}
 			};
 
