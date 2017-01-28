@@ -55,7 +55,8 @@
 	<platform name="android">
 	  <config-file parent="/*" target="res/xml/config.xml">
 		 <feature name="videoOverlay">
-			<param name="android-package" value="com.ezartech.ezar.videooverlay.ezAR" />
+			<param name="android-package" value="com.ezartech.ezar.videooverlay.VideoOverlayPlugin" />
+			<!--<param name="android-package" value="com.ezartech.ezar.videooverlay.ezAR" />-->
             <param name="onload" value="false" />
 		 </feature>
 	  </config-file>
@@ -65,7 +66,8 @@
 			<uses-feature android:name="android.hardware.camera.autofocus" />
 	  </config-file>
 	  <config-file parent="/*" target="AndroidManifest.xml" />
-	  <source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/videooverlay" />
+	  <source-file src="src/android/VideoOverlayPlugin.java" target-dir="src/com/ezartech/ezar/videooverlay" />
+	  <!--<source-file src="src/android/ezAR.java" target-dir="src/com/ezartech/ezar/videooverlay" />-->
 	  <source-file src="src/android/CameraDirection.java" target-dir="src/com/ezartech/ezar/videooverlay" />
 	   <source-file src="src/android/Util.java" target-dir="src/com/ezartech/ezar/videooverlay" />
       <source-file src="src/android/PermissionHelper.java" target-dir="src/com/ezartech/ezar/videooverlay" />
