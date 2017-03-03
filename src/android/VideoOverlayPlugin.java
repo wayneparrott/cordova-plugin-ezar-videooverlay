@@ -10,6 +10,7 @@
  */
 package com.ezartech.ezar.videooverlay;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -30,14 +31,20 @@ import org.json.JSONObject;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.Area;
 import android.hardware.Camera.Parameters;
+import android.service.media.CameraPrewarmService;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -50,12 +57,13 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 
 
-
 /**
  * Implements the ezAR VideoOverlay api for Android.
  */
 public class VideoOverlayPlugin extends CordovaPlugin {
 	private static final String TAG = "ezAR";
+
+	static final boolean EXPERIMENTAL = true;
 
 	//event type code
 	static final int UNDEFINED = -1;
@@ -179,12 +187,23 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 				//temporarily remove webview from view stack
 				((ViewGroup) webViewView.getParent()).removeView(webViewView);
 
-				cameraViewContainer = new FrameLayout(activity);
-				cameraViewContainer.setBackgroundColor(Color.BLACK);
-				activity.setContentView(cameraViewContainer,
-						new ViewGroup.LayoutParams(
-								LayoutParams.MATCH_PARENT,
-								LayoutParams.MATCH_PARENT));
+				if (EXPERIMENTAL) {
+					cameraViewContainer =
+							new AspectRatioFrameLayout(cordova.getActivity().getApplicationContext());
+					cameraViewContainer.setForegroundGravity(Gravity.CENTER);
+					FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+							LayoutParams.MATCH_PARENT,
+							LayoutParams.MATCH_PARENT,
+							Gravity.CENTER);
+					activity.setContentView(cameraViewContainer, params);
+				} else {
+					cameraViewContainer = new FrameLayout(activity);
+					cameraViewContainer.setBackgroundColor(Color.BLACK);
+					activity.setContentView(cameraViewContainer,
+							new ViewGroup.LayoutParams(
+									LayoutParams.MATCH_PARENT,
+									LayoutParams.MATCH_PARENT));
+				}
 
 				//create & add videoOverlay to view stack
 
@@ -261,28 +280,29 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 
 		if (args != null) {
 			String rgb = DEFAULT_RGB;
-      boolean fitWebViewToCameraViewArg = false;
+      		boolean fitWebViewToCameraViewArg = true;
 
 			try {
 				rgb = args.getString(0);
-        fitWebViewToCameraViewArg = args.getBoolean(1);
+        		fitWebViewToCameraViewArg = args.getBoolean(1);
 			} catch (JSONException e) {
 				//do nothing; resort to DEFAULT_RGB
 			}
-      final boolean fitWebViewToCameraView = fitWebViewToCameraViewArg;
+
+			final boolean fitWebViewToCameraView = fitWebViewToCameraViewArg;
 			setBackgroundColor(Color.parseColor(rgb));
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					webViewView.setBackgroundColor(getBackgroundColor());
 
-          if (!fitWebViewToCameraView) {
-           		cameraViewContainer.removeView(webViewView);
-           		((FrameLayout) cameraViewContainer.getParent()).addView(webViewView,
-           			new ViewGroup.LayoutParams(
-           				LayoutParams.MATCH_PARENT,
-           				LayoutParams.MATCH_PARENT));
-           }
+				  if (!fitWebViewToCameraView) {
+						cameraViewContainer.removeView(webViewView);
+						((FrameLayout) cameraViewContainer.getParent()).addView(webViewView,
+							new ViewGroup.LayoutParams(
+								LayoutParams.MATCH_PARENT,
+								LayoutParams.MATCH_PARENT));
+				   }
 				}
 			});
 		}
@@ -337,11 +357,16 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 						zoom = Math.min(parameters.getZoom() / 10.0 + 1, maxZoom);
 					}
 
+					float hpov = parameters.getHorizontalViewAngle();
+					float vpov = parameters.getVerticalViewAngle();
+
 					JSONObject jsonCamera = new JSONObject();
 					jsonCamera.put("id", i);
 					jsonCamera.put("position", type.toString());
 					jsonCamera.put("zoom", zoom);
 					jsonCamera.put("maxZoom", maxZoom);
+					jsonCamera.put("horizontalViewAngle", hpov);
+					jsonCamera.put("verticalViewAngle", vpov);
 					jsonObject.put(type.toString(), jsonCamera);
 				}
 			}
@@ -640,6 +665,7 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 		Log.d(TAG, "preview size: " + previewSizePair.previewSize.width + ":" + previewSizePair.previewSize.height);
 
 		cameraParameters.setPreviewSize(previewSizePair.previewSize.width, previewSizePair.previewSize.height);
+		cameraParameters.setPreviewFormat(ImageFormat.NV21);
 
 		//commenting out; not used now
 		//Camera.Size picSize = previewSizePair.pictureSize != null ? previewSizePair.pictureSize : previewSizePair.previewSize;
@@ -650,6 +676,7 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 
 		try {
 			if (cameraView.getSurfaceTexture() != null) {
+				//camera.setPreviewCallbackWithBuffer(this);
 				camera.setPreviewTexture(cameraView.getSurfaceTexture());
 			}
 		} catch (IOException e) {
@@ -700,6 +727,15 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 		cordova.getActivity().runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+
+				if (EXPERIMENTAL) {
+					float aspectRatio = isPortraitOrientation() ? 1.0f / previewSizePair.previewAspectRatio : previewSizePair.previewAspectRatio;
+					((AspectRatioFrameLayout)cameraViewContainer).setAspectRatio(aspectRatio);
+					View v = cordova.getActivity().findViewById(android.R.id.content);
+					v.requestLayout();
+
+					updateCameraDisplayOrientation();
+				} else {
 				FrameLayout.LayoutParams paramsX = (FrameLayout.LayoutParams) cameraViewContainer.getLayoutParams();
 				Log.d(TAG,"updateCordovaViewContainer PRE invalidate: " + paramsX.width + ":" + paramsX.height);
 
@@ -713,8 +749,8 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 				}
 
 				float scale = Math.min((float) sz.width / (float) previewWidth, (float) sz.height / (float) previewHeight);
-				float dx = Math.abs(sz.width - previewWidth * scale) / 2f;
-				float dy = Math.abs(sz.height - previewHeight * scale) / 2f;
+				//float dx = Math.abs(sz.width - previewWidth * scale) / 2f;
+				//float dy = Math.abs(sz.height - previewHeight * scale) / 2f;
 
 				Log.d(TAG, "computeTransform, scale: " + scale);
 
@@ -738,6 +774,7 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 				Log.d(TAG, "updateCordovaViewContainer POST invalidate: " + paramsX.width + ":" + paramsX.height);
 
 				updateMatrix();
+				}
 			}
 		});
 	}

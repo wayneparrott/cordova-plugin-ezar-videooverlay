@@ -183,7 +183,10 @@ module.exports = (function() {
         var zoom = cameraData.zoom
         var maxZoom = cameraData.maxZoom;
         var hasZoom = maxZoom > 0;
-        var camera = new Camera(_ezAR,id,position,hasZoom,maxZoom,zoom);
+        var horizontalViewAngle = cameraData.horizontalViewAngle;
+        var verticalViewAngle = cameraData.verticalViewAngle;
+        var camera = new Camera(_ezAR,id,position,hasZoom,maxZoom,zoom,
+                                horizontalViewAngle,verticalViewAngle);
 
         return camera;
     }
