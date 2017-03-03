@@ -420,6 +420,17 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     } else if ([camera position] == AVCaptureDevicePositionBack) {
         [cameraProps setObject: @"BACK" forKey:@"position"];
     }
+
+    float hpov = camera.activeFormat.videoFieldOfView;
+    [cameraProps setObject: @(hpov) forKey:@"horizontalViewAngle"];
+
+    CGRect screenBounds = [[UIScreen mainScreen] bounds];
+    float aspectRatio = screenBounds.size.width / screenBounds.size.height;
+    float invertAspectRatio = aspectRatio < 1.0 ? aspectRatio : 1.0 / aspectRatio;
+    //float vpov = hpov * invertAspectRatio;
+    float vpov = 2.0 * atanf( tanf(hpov/2.0 * M_PI/180.0) * invertAspectRatio) * 180.0/M_PI;
+    [cameraProps setObject: @(vpov) forKey:@"verticalViewAngle"];
+
     return cameraProps;
 }
 
