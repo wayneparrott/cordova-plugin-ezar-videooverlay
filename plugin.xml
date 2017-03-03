@@ -41,7 +41,8 @@
 		<header-file src="src/ios/CDVezARCameraViewController.h" /> 
 		<source-file src="src/ios/CDVezARVideoOverlay.m" />
 		<source-file src="src/ios/CDVezARCameraViewController.m" />
-		
+		<!--<source-file src="src/ios/Utils.h" />-->
+
 		<framework src="UIKit.framework" />
 		<framework src="Foundation.framework" />
 		<framework src="AVFoundation.framework" />
