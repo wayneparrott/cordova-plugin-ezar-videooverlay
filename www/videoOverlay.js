@@ -177,20 +177,6 @@ module.exports = (function() {
         }
     }
 
-    function initCamera(cameraData) {
-        var id = cameraData.id;
-        var position = cameraData.position;
-        var zoom = cameraData.zoom
-        var maxZoom = cameraData.maxZoom;
-        var hasZoom = maxZoom > 0;
-        var horizontalViewAngle = cameraData.horizontalViewAngle;
-        var verticalViewAngle = cameraData.verticalViewAngle;
-        var camera = new Camera(_ezAR,id,position,hasZoom,maxZoom,zoom,
-                                horizontalViewAngle,verticalViewAngle);
-
-        return camera;
-    }
-
     function initCameras(deviceData) {
         //console.log(deviceData);
 
@@ -201,6 +187,11 @@ module.exports = (function() {
             _backCamera = initCamera(deviceData.BACK);
         }
     }
+
+    function initCamera(cameraData) {
+        return new Camera(_ezAR,cameraData); 
+    }
+
 
     return _ezAR;
 

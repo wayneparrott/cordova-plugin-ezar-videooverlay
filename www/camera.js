@@ -25,7 +25,7 @@ var exec = require('cordova/exec'),
  * @param {float} zoom  current magnification level of the camera up 
  * 			to the maxZoom
  */
-var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,horizontalViewAngle,verticalViewAngle) {
+var Camera = function(ezar,cameraData) {
 	var _ezar,
         _self,
 	    _id,
@@ -41,15 +41,15 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom,horizontalViewAngle,
     
     _self = this;
 	_ezar = ezar;
-    _id = id;
-    _position = position;
-    _hasZoom = hasZoom;
-    _maxZoom = maxZoom;
-    _zoom = zoom;
-    _horizontalViewAngle = horizontalViewAngle;
-    _verticalViewAngle = verticalViewAngle;
+    _id = cameraData.id;
+    _position = cameraData.position;
+    _zoom = cameraData.zoom;
+    _maxZoom = cameraData.maxZoom;
+    _hasZoom = _maxZoom > 0;
+    _horizontalViewAngle = cameraData.horizontalViewAngle;
+    _verticalViewAngle = cameraData.verticalViewAngle;
 
-     
+
     /**
      * @return {boolean} Test if this camera is currently running.
      */
