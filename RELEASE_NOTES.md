@@ -1,5 +1,10 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.11 (20170306)
+1. New Camera api, getHorizontalViewAngle() & getVerticalViewAngle()
+2. Android - fixed refresh issue when performing camera start(), stop(), start() sequence
+
+
 ##0.2.10 (20170123)
 1. iOS - handle multiple calls to initializeVideoOverlay().
 2. Android - added new android specific initializeVideoOverlay option 'fitWebViewToCameraView'.
