@@ -60,7 +60,7 @@ import android.widget.FrameLayout;
 /**
  * Implements the ezAR VideoOverlay api for Android.
  */
-public class VideoOverlayPlugin extends CordovaPlugin {
+public class VideoOverlayPlugin extends CordovaPlugin implements Camera.PreviewCallback {
 	private static final String TAG = "ezAR";
 
 	static final boolean EXPERIMENTAL = true;
@@ -69,6 +69,9 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 	static final int UNDEFINED = -1;
 	static final int STARTED = 0;
 	static final int STOPPED = 1;
+
+	static int PREVIEW_FORMAT = ImageFormat.NV21;
+	static int FRAME_BUFFER_CNT = 2;
 
 	private CallbackContext callbackContext;
 
@@ -89,6 +92,8 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 	private double currentZoom;
 	private boolean isPreviewing = false;
 	private boolean isPaused = false;
+
+	private VideoOverlayFrameListener frameListener;
 
 	private boolean supportSnapshot;
 	private Matrix matrix;
@@ -456,10 +461,13 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 					camera.startPreview();
 					webViewView.setBackgroundColor(Color.TRANSPARENT);
 
+					camera.setPreviewCallback(VideoOverlayPlugin.this);
+
 					setZoom(zoom, null);
 
 					sendFlashlightEvent(STARTED, cameraDirection, cameraId, camera);
 					sendFaceDetectorEvent(STARTED, cameraDirection, cameraId, camera);
+					sendOpenCVEvent(STARTED, cameraDirection, cameraId, camera);
 
 					if (callbackContext != null) {
 						callbackContext.success();
@@ -502,9 +510,11 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 
 			camera.cancelAutoFocus();
 			camera.stopPreview();
+			camera.setPreviewCallback(null);
 			camera.setPreviewDisplay(null);
 			sendFlashlightEvent(STOPPED, cameraDirection, cameraId, camera);
 			sendFaceDetectorEvent(STOPPED, cameraDirection, cameraId, camera);
+			sendOpenCVEvent(STOPPED, cameraDirection, cameraId, camera);
 			camera.release();
 
 		} catch (IOException e) {
@@ -519,6 +529,32 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 			callbackContext.success();
 		}
 	}
+
+	// when listener not null, camera must be running
+	public void setFrameListener(VideoOverlayFrameListener listener) {
+		frameListener = listener;
+
+		if (frameListener == null) {
+			camera.setPreviewCallbackWithBuffer(null);
+		} else {
+			//initialize frame buffers
+			int sz = previewSizePair.previewSize.width * previewSizePair.previewSize.height *
+						ImageFormat.getBitsPerPixel(PREVIEW_FORMAT) / 8;
+
+			for (int i=0; i < FRAME_BUFFER_CNT; i++) {
+				camera.addCallbackBuffer(new byte[sz]);
+			}
+
+			camera.setPreviewCallbackWithBuffer(this);
+		}
+	}
+
+	public void onPreviewFrame(byte[] data, Camera camera) {
+		if (frameListener == null) return;
+
+		frameListener.frameReady( new FrameBufferHolder(data,camera) );
+	}
+
 
 	public int getBackgroundColor() {
 		return bgColor;
@@ -1219,6 +1255,42 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 		}
 	}
 
+	//reflectively access VideoOverlay plugin to get camera in same direction as lightLoc
+	private void sendOpenCVEvent(int state, CameraDirection cameraDirection, int cameraId, Camera camera) {
+
+		CordovaPlugin openCVPlugin = getOpenCVPlugin();
+		if (openCVPlugin == null) {
+			return;
+		}
+
+		Method method = null;
+
+		try {
+			if (state == STARTED) {
+				method = openCVPlugin.getClass().getMethod("videoOverlayStarted", int.class, int.class);
+			} else {
+				method = openCVPlugin.getClass().getMethod("videoOverlayStopped", int.class, int.class );
+			}
+		} catch (SecurityException e) {
+			//e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			//e.printStackTrace();
+		}
+
+		try {
+			if (method == null) return;
+
+			method.invoke(openCVPlugin, cameraDirection.ordinal(), cameraId, camera);
+
+		} catch (IllegalArgumentException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		} catch (IllegalAccessException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		} catch (InvocationTargetException e) { // exception handling omitted for brevity
+			//e.printStackTrace();
+		}
+	}
+
 	private CordovaPlugin getPlugin(String pluginName) {
 		CordovaPlugin plugin = webView.getPluginManager().getPlugin(pluginName);
 		return plugin;
@@ -1236,6 +1308,11 @@ public class VideoOverlayPlugin extends CordovaPlugin {
 
 	private CordovaPlugin getFaceDetectorPlugin() {
 		String pluginName = "facedetector";
+		return getPlugin(pluginName);
+	}
+
+	private CordovaPlugin getOpenCVPlugin() {
+		String pluginName = "opencv";
 		return getPlugin(pluginName);
 	}
 }
