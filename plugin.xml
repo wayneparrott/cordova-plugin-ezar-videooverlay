@@ -68,6 +68,8 @@
 	  <config-file parent="/*" target="AndroidManifest.xml" />
 	  <source-file src="src/android/VideoOverlayPlugin.java" target-dir="src/com/ezartech/ezar/videooverlay" />
 	  <source-file src="src/android/AspectRatioFrameLayout.java" target-dir="src/com/ezartech/ezar/videooverlay" />
+	  <source-file src="src/android/VideoOverlayFrameListener.java" target-dir="src/com/ezartech/ezar/videooverlay" />
+	  <source-file src="src/android/FrameBufferHolder.java" target-dir="src/com/ezartech/ezar/videooverlay" />
 	  <source-file src="src/android/CameraDirection.java" target-dir="src/com/ezartech/ezar/videooverlay" />
 	   <source-file src="src/android/Util.java" target-dir="src/com/ezartech/ezar/videooverlay" />
       <source-file src="src/android/PermissionHelper.java" target-dir="src/com/ezartech/ezar/videooverlay" />
