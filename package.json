@@ -1,6 +1,6 @@
 {
   "name": "com.ezartech.ezar.videooverlay",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "Project the camera's video output on the background of the Cordova webview.",
    "cordova": {
     "id": "com.ezartech.ezar.videooverlay",

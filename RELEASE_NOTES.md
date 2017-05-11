@@ -1,5 +1,9 @@
 #ezAR VideoOverlay Plugin Release Notes
 
+##0.2.12 (20170511)
+1. Added package.json for Cordova 7 compliance.
+
+
 ##0.2.11 (20170306)
 1. New Camera api, getHorizontalViewAngle() & getVerticalViewAngle()
 2. Android - fixed refresh issue when performing camera start(), stop(), start() sequence
