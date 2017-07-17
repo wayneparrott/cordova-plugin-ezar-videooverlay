@@ -4,7 +4,7 @@
 -->
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
 	  xmlns:android="http://schemas.android.com/apk/res/android"
-	  id="cordova-plugin-ezar-video-overlay"
+	  id="cordova-plugin-ezar-videooverlay"
 	  version="1.0.0">
 	  
 	<name>ezAR Video Overlay Plugin</name>
