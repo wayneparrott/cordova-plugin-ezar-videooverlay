@@ -1,6 +1,6 @@
 #ezAR VideoOverlay Plugin Release Notes
 
-##0.2.12 (20170717)
+##1.0.0 (20170717)
 1. Added package.json for Cordova 7 compliance.
 2. Renamed to cordova-plugin-ezar-video-overlay in preparation for publishing to npm
 
