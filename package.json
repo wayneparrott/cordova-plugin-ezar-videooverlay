@@ -1,9 +1,9 @@
 {
-  "name": "com.ezartech.ezar.videooverlay",
-  "version": "0.2.12",
-  "description": "Project the camera's video output on the background of the Cordova webview.",
-   "cordova": {
-    "id": "com.ezartech.ezar.videooverlay",
+  "name": "ezAR VideoOverlay Plugin",
+  "version": "1.0.0",
+  "description": "Overlay the Cordova webview on a live video stream",
+  "cordova": {
+    "id": "cordova-plugin-ezar-video-overlay",
     "platforms": [
       "ios",
       "android"
@@ -13,15 +13,9 @@
     "augmented reality",
     "video preview",
     "overlay",
-    "computer vision",
-    "ecosystem:cordova",
-    "cordova-ios",
-    "cordova-android"
+    "computer vision"
   ],
-  "author": "Wayne Parrott",
+  "author": "Wayne Parrott <wayne@ezartech.com> (https://ezartech.com)",
   "license": "modified MIT License, see http://ezartech.com/ezarstartupkit-license",
-  "bugs": {
-    "url": "https://support.ezartech.com"
-  },
   "homepage": "https://ezartech.com"
 }

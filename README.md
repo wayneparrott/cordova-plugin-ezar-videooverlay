@@ -23,7 +23,7 @@ rendered on the camera view.  At this time the video content is NOT saved to the
 The simplest ezAR application involves adding the VideoOverlay plugin  
 to your Corodva project using the Cordova CLI
 
-        cordova plugin add pathtoezar/com.ezartech.ezar.videooverlay
+        cordova plugin add cordova-plugin-ezar-video-overlay
 
 Next in your Cordova JavaScript deviceready handler include the following  
 JavaScript snippet to initialize the VideoOverlay plugin and activate the  
@@ -44,6 +44,6 @@ See [ezartech.com](http://ezartech.com) for documentation and support.
 The ezAR Startup Kit is licensed under a [modified MIT license](http://www.ezartech.com/ezarstartupkit-license).
 
 
-Copyright (c) 2015-2016, ezAR Technologies
+Copyright (c) 2015-2017, ezAR Technologies
 
 
