@@ -7,7 +7,7 @@
 	  id="cordova-plugin-ezar-video-overlay"
 	  version="1.0.0">
 	  
-	<name>ezAR Video Overlay</name>
+	<name>ezAR Video Overlay Plugin</name>
 	<description>Augmented reality SDK for Cordova hybrid-mobile applications. 
 				 Overlay a real-world background mobile device camera with
 				 a transparent application web (HTML) UI that has full access
