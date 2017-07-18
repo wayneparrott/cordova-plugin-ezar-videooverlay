@@ -1,5 +1,5 @@
 {
-  "name": "ezAR VideoOverlay Plugin",
+  "name": "cordova-plugin-ezar-videooverlay",
   "version": "1.0.0",
   "description": "Overlay the Cordova webview onto a live video stream",
   "cordova": {
