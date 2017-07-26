@@ -1,4 +1,4 @@
-/**
+/**xxxxxx
  * Copyright 2016, ezAR Technologies
  * http://ezartech.com
  *
@@ -671,6 +671,9 @@ public class VideoOverlayPlugin extends CordovaPlugin implements Camera.PreviewC
 	private void initCamera(Camera camera) {
 		Camera.Parameters cameraParameters = camera.getParameters();
 
+		//hack: force auto focus off - will this reenable continuous-focus on S8
+		camera.cancelAutoFocus();
+
 		defaultFocusMode = cameraParameters.getFocusMode();
 
 		continousFocusSupported = cameraParameters.getSupportedFocusModes().contains(
@@ -684,9 +687,11 @@ public class VideoOverlayPlugin extends CordovaPlugin implements Camera.PreviewC
 
 		if (continousFocusSupported) {
 			cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-		} else if (Util.isSupported(Parameters.FOCUS_MODE_AUTO, cameraParameters.getSupportedFocusModes())) {
-			cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 		}
+		//hack: is this causing S8 non-focus behavior after resume????? Commented out to test
+//		else if (Util.isSupported(Parameters.FOCUS_MODE_AUTO, cameraParameters.getSupportedFocusModes())) {
+//			cameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+//		}
 
 //		camera.enableShutterSound(true);  //requires api 17
 		int camWidth = isPortraitOrientation() ? cameraView.getHeight() : cameraView.getWidth();
