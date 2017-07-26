@@ -25,7 +25,7 @@ var exec = require('cordova/exec'),
  * @param {float} zoom  current magnification level of the camera up 
  * 			to the maxZoom
  */
-var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
+var Camera = function(ezar,cameraData) {
 	var _ezar,
         _self,
 	    _id,
@@ -34,18 +34,22 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
 		_hasZoom,
 		_maxZoom,
 		_zoom,
-        _androidZoomScale;
+        _androidZoomScale,
+        _horizontalViewAngle,
+        _verticalViewAngle;
 		//_state = Camera.State.STOPPED,
     
     _self = this;
 	_ezar = ezar;
-    _id = id;
-    _position = position;
-    _hasZoom = hasZoom;
-    _maxZoom = maxZoom;
-    _zoom = zoom;
+    _id = cameraData.id;
+    _position = cameraData.position;
+    _zoom = cameraData.zoom;
+    _maxZoom = cameraData.maxZoom;
+    _hasZoom = _maxZoom > 0;
+    _horizontalViewAngle = cameraData.horizontalViewAngle;
+    _verticalViewAngle = cameraData.verticalViewAngle;
 
-     
+
     /**
      * @return {boolean} Test if this camera is currently running.
      */
@@ -167,6 +171,22 @@ var Camera = function(ezar,id,position,hasZoom,maxZoom,zoom) {
         }
 	};
 
+    /**
+	 * Current horizontal view angle
+	 * @return {float} a value between 0 and 180 degrees
+	 */
+	this.getHorizontalViewAngle = function() {
+		return _horizontalViewAngle;
+	};
+	
+    /**
+	 * Current vertical view angle
+     * @return {float} a value between 0 and 180 degrees
+	 */
+	this.getVerticalViewAngle = function() {
+		return _verticalViewAngle;
+	};
+
 	/**
 	 * Start video capture and presentation. This camera is the ezar#activeCamera
 	 * @param {function} [successCB] function called on success
@@ -239,4 +259,3 @@ function isFunction(f) {
 }
 
 module.exports = Camera;
-

@@ -52,42 +52,47 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     //set main view background to black; otherwise white area appears during rotation
     self.viewController.view.backgroundColor = [UIColor blackColor];
  
-    
-    // SETUP CAPTURE SESSION -----
-    NSLog(@"Setting up capture session");
-    captureSession = [[AVCaptureSession alloc] init];
-    
-    NSError *error;
-    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-    for (AVCaptureDevice *device in devices) {
-        if (error) break;
-        if ([device position] == AVCaptureDevicePositionBack) {
-            backVideoDevice = device;
-            backVideoDeviceInput =
-                [AVCaptureDeviceInput deviceInputWithDevice:backVideoDevice error: &error];
-        } else if ([device position] == AVCaptureDevicePositionFront) {
-            frontVideoDevice = device;
-            frontVideoDeviceInput=
-                [AVCaptureDeviceInput deviceInputWithDevice:frontVideoDevice error:&error];
+    //impl for Brandon B problem
+    //   videoOverlay accessed from inappbrowser which reloads all plugins. 
+    //   Thus prevent new captureSession and cameraView creation
+    if (!captureSession) { 
+        // SETUP CAPTURE SESSION -----
+        NSLog(@"Setting up capture session");
+        captureSession = [[AVCaptureSession alloc] init];
+        
+        NSError *error;
+        NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+        for (AVCaptureDevice *device in devices) {
+            if (error) break;
+            if ([device position] == AVCaptureDevicePositionBack) {
+                backVideoDevice = device;
+                backVideoDeviceInput =
+                    [AVCaptureDeviceInput deviceInputWithDevice:backVideoDevice error: &error];
+            } else if ([device position] == AVCaptureDevicePositionFront) {
+                frontVideoDevice = device;
+                frontVideoDeviceInput=
+                    [AVCaptureDeviceInput deviceInputWithDevice:frontVideoDevice error:&error];
+            }
         }
-    }
-    
-    if (error) {
-        NSDictionary* errorResult = [self makeErrorResult: 1 withError: error];
         
-        CDVPluginResult* pluginResult =
-          [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                        messageAsDictionary: errorResult];
+        if (error) {
+            NSDictionary* errorResult = [self makeErrorResult: 1 withError: error];
+            
+            CDVPluginResult* pluginResult =
+            [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                            messageAsDictionary: errorResult];
+            
+            return  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }
         
-        return  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        //SETUP CameraViewController
+        camController =[[CDVezARCameraViewController alloc]
+                        initWithController: (CDVViewController*)self.viewController
+                        session: captureSession];
+        camController.view;
+        camController.view.tag = EZAR_CAMERA_VIEW_TAG;
     }
-    
-    //SETUP CameraViewController
-    camController =[[CDVezARCameraViewController alloc]
-                    initWithController: (CDVViewController*)self.viewController
-                    session: captureSession];
-    camController.view;
-    camController.view.tag = EZAR_CAMERA_VIEW_TAG;
+
      //set main view background to black; otherwise white area appears during rotation
     self.viewController.view.backgroundColor = [UIColor blackColor];
     
@@ -415,6 +420,17 @@ NSInteger const EZAR_CAMERA_VIEW_TAG = 999;
     } else if ([camera position] == AVCaptureDevicePositionBack) {
         [cameraProps setObject: @"BACK" forKey:@"position"];
     }
+
+    float hpov = camera.activeFormat.videoFieldOfView;
+    [cameraProps setObject: @(hpov) forKey:@"horizontalViewAngle"];
+
+    CGRect screenBounds = [[UIScreen mainScreen] bounds];
+    float aspectRatio = screenBounds.size.width / screenBounds.size.height;
+    float invertAspectRatio = aspectRatio < 1.0 ? aspectRatio : 1.0 / aspectRatio;
+    //float vpov = hpov * invertAspectRatio;
+    float vpov = 2.0 * atanf( tanf(hpov/2.0 * M_PI/180.0) * invertAspectRatio) * 180.0/M_PI;
+    [cameraProps setObject: @(vpov) forKey:@"verticalViewAngle"];
+
     return cameraProps;
 }
 

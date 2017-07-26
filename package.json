@@ -1,0 +1,21 @@
+{
+  "name": "cordova-plugin-ezar-videooverlay",
+  "version": "1.0.0",
+  "description": "Overlay the Cordova webview onto a live video stream",
+  "cordova": {
+    "id": "cordova-plugin-ezar-videooverlay",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
+  "keywords": [
+    "augmented reality",
+    "video preview",
+    "overlay",
+    "computer vision"
+  ],
+  "author": "Wayne Parrott <wayne@ezartech.com> (https://ezartech.com)",
+  "license": "modified MIT License, see http://ezartech.com/ezarstartupkit-license",
+  "homepage": "https://ezartech.com"
+}
