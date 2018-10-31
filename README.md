@@ -1,3 +1,5 @@
+Deprecated - no longer supported.
+
 # ezAR VideoOverlay Cordova Plugin  
 This plugin overlays the Cordova WebView on top of a custom camera view 
 which provides a video preview. Using the VideoOverlay JavaScript api you 
